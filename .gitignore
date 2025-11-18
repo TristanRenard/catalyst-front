@@ -5,3 +5,8 @@
 # React Router
 /.react-router/
 /build/
+/.idea/.gitignore
+/.idea/modules.xml
+/package-lock.json
+/.idea/UX_UI_FRONT.iml
+/.idea/vcs.xml
