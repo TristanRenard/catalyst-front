@@ -1,11 +1,11 @@
 import { Link, useNavigate } from "react-router";
+<<<<<<< HEAD:app/routes/_index.tsx
 import type { Route } from "../+types/root";
+=======
+>>>>>>> d5db8ee (feat: Add admin token modal and related hooks for admin authentication):app/routes/index.tsx
 
-export const meta = ({}: Route.MetaArgs) => {
-  return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
-  ];
+export const meta = () => {
+  return [{ title: "New React Router App" }];
 };
 
 const Home = () => {
@@ -50,6 +50,6 @@ const Home = () => {
       </div>
     </main>
   );
-}
+};
 
 export default Home;

@@ -3,11 +3,8 @@ import { Link, useNavigate } from "react-router"
 import { publicAPI } from "~/utils/publicAPI"
 
 export const meta = () => {
-  return [
-    { title: "Login - Catalyst" },
-    { name: "description", content: "Connectez-vous à Catalyst" },
-  ]
-}
+  return [{ title: "Login - Catalyst" }];
+};
 
 const LoginRoute = () => {
   const [email, setEmail] = useState<string>("")
@@ -85,7 +82,7 @@ const LoginRoute = () => {
         </div>
       </div>
     </main>
-  )
-}
+  );
+};
 
-export default LoginRoute
+export default LoginRoute;
