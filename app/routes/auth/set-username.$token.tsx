@@ -1,18 +1,35 @@
+import { redirect, type LoaderFunctionArgs } from "@remix-run/node"
 import { useState } from "react"
-import { Link, useNavigate } from "react-router"
+import { Link, useLoaderData, useNavigate } from "react-router"
 import { publicAPI } from "~/utils/publicAPI"
 
+export const loader = async ({ params }: LoaderFunctionArgs) => {
+  const { token } = params
+  if (!token) {
+    return redirect("/?error=missing-token")
+  }
+  return { token }
+}
+
 export const meta = () => {
-  return [{ title: "Login - Catalyst" }];
-};
+  return [
+    { title: "Login - Catalyst" },
+    { name: "description", content: "Connectez-vous à Catalyst" },
+  ]
+}
 
 const LoginRoute = () => {
-  const [email, setEmail] = useState<string>("")
+  const { token } = useLoaderData<typeof loader>()
+  console.log(token)
+  const [username, setUsername] = useState<string>("")
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const res = await publicAPI.post("/login", { email })
+    const res = await publicAPI.post("/verify", {
+      verificationToken: token,
+      username
+    })
     if (res.status === 200) {
       navigate("/")
     } else {
@@ -33,7 +50,7 @@ const LoginRoute = () => {
 
         <div className="bg-[#1a1820] rounded-2xl shadow-xl p-8 border border-gray-800">
           <h1 className="text-3xl font-bold text-center mb-8 text-[#EBDFF0]">
-            Login
+            Set Username
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -42,15 +59,15 @@ const LoginRoute = () => {
                 htmlFor="email"
                 className="block text-sm font-semibold mb-2 text-[#EBDFF0]"
               >
-                Email
+                Username
               </label>
               <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:border-[#EBDFF0] transition-colors bg-[#2a2830] border-[#3a3840] text-[#EBDFF0]"
-                placeholder="votre@email.com"
+                placeholder="yourusername"
                 required
               />
             </div>
@@ -59,7 +76,7 @@ const LoginRoute = () => {
               type="submit"
               className="w-full py-3 bg-[#EBDFF0] font-bold rounded-lg hover:bg-[#df93ff] transition-colors duration-200 shadow-md hover:shadow-lg text-[#2a2830]"
             >
-              Se connecter
+              Set Username
             </button>
           </form>
 
@@ -68,13 +85,13 @@ const LoginRoute = () => {
               to="/"
               className="text-sm hover:opacity-80 transition-opacity text-[#EBDFF0]"
             >
-              ← Retour à l'accueil
+              ← Go back to Home
             </Link>
           </div>
         </div>
       </div>
     </main>
-  );
-};
+  )
+}
 
-export default LoginRoute;
+export default LoginRoute
