@@ -1,11 +1,7 @@
 import { Link, useNavigate } from "react-router";
-import type { Route } from "./+types/home";
 
-export const meta = ({}: Route.MetaArgs) => {
-  return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
-  ];
+export const meta = () => {
+  return [{ title: "New React Router App" }];
 };
 
 const Home = () => {
@@ -14,7 +10,7 @@ const Home = () => {
   return (
     <main className="flex items-center justify-center pt-16 pb-4">
       <div className="absolute top-4 right-4">
-        <Link to="/login">
+        <Link to="auth/login">
           <button className="px-6 py-2 bg-[#fe5c5c] text-white font-semibold rounded-lg hover:bg-[#ff7676] transition-colors duration-200 shadow-md hover:shadow-lg">
             Login
           </button>
@@ -50,6 +46,6 @@ const Home = () => {
       </div>
     </main>
   );
-}
+};
 
 export default Home;
