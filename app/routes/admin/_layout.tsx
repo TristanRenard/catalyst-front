@@ -17,19 +17,18 @@ const AdminLayout = () => {
   }, [adminToken]);
 
   const isActive = (path: string) => {
-    return (
-      location.pathname === path || location.pathname.startsWith(path + "/")
-    );
+    return location.pathname === path;
   };
 
   const navItems = [
-    { path: "/admin", label: "Dashboard", icon: "🏠" },
+    { path: "/admin", label: "Tableau de bord", icon: "🏠" },
     { path: "/admin/energies/create", label: "Créer une énergie", icon: "⚡" },
     { path: "/admin/energies", label: "Gérer les énergies", icon: "🔋" },
     { path: "/admin/cards/create", label: "Créer une carte", icon: "➕" },
     { path: "/admin/cards", label: "Gérer les cartes", icon: "🃏" },
     { path: "/admin/games/history", label: "Parties", icon: "🎮" },
     { path: "/admin/users", label: "Utilisateurs", icon: "👥" },
+    { path: "/admin/leaderboard", label: "Classement", icon: "🏆" },
   ];
 
   return (
@@ -39,16 +38,23 @@ const AdminLayout = () => {
         onClose={() => setIsModalOpen(false)}
       />
 
-      <div className="min-h-screen bg-gray-100">
-        <header className="bg-white shadow">
+      <div className="min-h-screen bg-[#232029] relative">
+        <header className="bg-[#1a1820] border-b border-gray-800">
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-800">
-                ⚡ Catalyst Admin
-              </h1>
+              <div className="flex items-center gap-4">
+                <img
+                  src="/images/logo.png"
+                  alt="Catalyst Logo"
+                  className="h-12 w-auto"
+                />
+                <h1 className="text-2xl font-bold text-[#EBDFF0]">
+                  Admin
+                </h1>
+              </div>
               <Link
                 to="/"
-                className="text-gray-600 hover:text-gray-800 flex items-center gap-2"
+                className="text-[#EBDFF0] hover:opacity-80 transition-opacity flex items-center gap-2"
               >
                 ← Retour au jeu
               </Link>
@@ -59,7 +65,7 @@ const AdminLayout = () => {
         <div className="container mx-auto px-6 py-8">
           <div className="flex gap-6">
             <aside className="w-64 shrink-0">
-              <nav className="bg-white rounded-lg shadow p-4">
+              <nav className="bg-[#1a1820] rounded-2xl shadow-xl p-4 border border-gray-800">
                 <ul className="space-y-2">
                   {navItems.map((item) => (
                     <li key={item.path}>
@@ -67,8 +73,8 @@ const AdminLayout = () => {
                         to={item.path}
                         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                           isActive(item.path)
-                            ? "bg-blue-500 text-white"
-                            : "text-gray-700 hover:bg-gray-100"
+                            ? "bg-[#df93ff] text-[#1a1820] font-semibold"
+                            : "bg-[#2a2830] text-[#EBDFF0] hover:opacity-80"
                         }`}
                       >
                         <span className="text-xl">{item.icon}</span>
@@ -81,7 +87,7 @@ const AdminLayout = () => {
             </aside>
 
             <main className="flex-1">
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-[#1a1820] rounded-2xl shadow-xl p-6 border border-gray-800">
                 <Outlet />
               </div>
             </main>

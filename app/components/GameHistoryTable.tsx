@@ -59,38 +59,38 @@ export const GameHistoryTable = () => {
   return (
     <div className="w-full">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">Historique des Parties</h2>
-        <p className="text-gray-600">Liste de toutes les parties jouées</p>
+        <h2 className="text-2xl font-bold text-[#EBDFF0] mb-2">Historique des Parties</h2>
+        <p className="text-[#EBDFF0] opacity-70">Liste de toutes les parties jouées</p>
       </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto bg-[#2a2830] rounded-lg border border-[#3a3840]">
+        <table className="min-w-full divide-y divide-[#3a3840]">
+          <thead className="bg-[#232029]">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#EBDFF0] uppercase tracking-wider">
                 #
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#EBDFF0] uppercase tracking-wider">
                 Gagnant
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#EBDFF0] uppercase tracking-wider">
                 Ratio Gagnant
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#EBDFF0] uppercase tracking-wider">
                 Perdant
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#EBDFF0] uppercase tracking-wider">
                 Ratio Perdant
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-[#EBDFF0] uppercase tracking-wider">
                 Date
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-[#2a2830] divide-y divide-[#3a3840]">
             {games.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                <td colSpan={6} className="px-6 py-4 text-center text-[#EBDFF0] opacity-70">
                   Aucune partie enregistrée
                 </td>
               </tr>
@@ -98,32 +98,32 @@ export const GameHistoryTable = () => {
               games.map((game) => (
                 <tr
                   key={game.id}
-                  className="hover:bg-gray-50 transition-colors"
+                  className="hover:bg-[#3a3840] transition-colors"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#EBDFF0]">
                     {game.id}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-green-600">
+                    <span className="text-sm font-medium text-green-400">
                       {game.winner}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-300">
                       {game.winnerRatio.toFixed(1)}%
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-red-600">
+                    <span className="text-sm font-medium text-red-400">
                       {game.loser}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900 text-red-300">
                       {game.loserRatio.toFixed(1)}%
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#EBDFF0] opacity-70">
                     {formatDate(game.date)}
                   </td>
                 </tr>
@@ -133,7 +133,7 @@ export const GameHistoryTable = () => {
         </table>
       </div>
 
-      <div className="mt-4 text-sm text-gray-600">
+      <div className="mt-4 text-sm text-[#EBDFF0] opacity-70">
         Total: {games.length} partie{games.length > 1 ? "s" : ""}
       </div>
     </div>

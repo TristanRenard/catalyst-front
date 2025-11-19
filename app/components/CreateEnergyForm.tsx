@@ -66,7 +66,7 @@ const CreateEnergyForm = ({
       <div>
         <label
           htmlFor="name"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="block text-sm font-medium text-[#EBDFF0] mb-2"
         >
           Nom de la carte *
         </label>
@@ -77,7 +77,7 @@ const CreateEnergyForm = ({
           value={formData.name}
           onChange={handleInputChange}
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 bg-[#232029] border-2 border-[#3a3840] text-[#EBDFF0] rounded-lg focus:outline-none focus:border-[#df93ff] transition-colors"
           placeholder="Ex: Énergie solaire"
         />
       </div>
@@ -85,7 +85,7 @@ const CreateEnergyForm = ({
       <div>
         <label
           htmlFor="color"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="block text-sm font-medium text-[#EBDFF0] mb-2"
         >
           Couleur *
         </label>
@@ -98,14 +98,14 @@ const CreateEnergyForm = ({
             onChange={handleInputChange}
             className="h-12 w-24 rounded cursor-pointer"
           />
-          <span className="text-gray-600">{formData.color}</span>
+          <span className="text-[#EBDFF0]">{formData.color}</span>
         </div>
       </div>
 
       <div>
         <label
           htmlFor="quota"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="block text-sm font-medium text-[#EBDFF0] mb-2"
         >
           Quota *
         </label>
@@ -117,7 +117,7 @@ const CreateEnergyForm = ({
           onChange={handleInputChange}
           required
           min="0"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 bg-[#232029] border-2 border-[#3a3840] text-[#EBDFF0] rounded-lg focus:outline-none focus:border-[#df93ff] transition-colors"
           placeholder="Ex: 10"
         />
       </div>
@@ -125,7 +125,7 @@ const CreateEnergyForm = ({
       <div>
         <label
           htmlFor="frontImage"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="block text-sm font-medium text-[#EBDFF0] mb-2"
         >
           Image avant de la carte *
         </label>
@@ -135,7 +135,7 @@ const CreateEnergyForm = ({
           accept="image/*"
           onChange={(e) => handleFileChange(e, "front")}
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          className="w-full px-4 py-2 bg-[#232029] border-2 border-[#3a3840] text-[#EBDFF0] rounded-lg focus:outline-none focus:border-[#df93ff] transition-colors file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-[#df93ff] file:text-[#1a1820] file:font-semibold hover:file:bg-[#EBDFF0]"
         />
         {frontPreview && (
           <div className="mt-4">
@@ -151,7 +151,7 @@ const CreateEnergyForm = ({
       <div>
         <label
           htmlFor="backImage"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="block text-sm font-medium text-[#EBDFF0] mb-2"
         >
           Image arrière de la carte *
         </label>
@@ -161,7 +161,7 @@ const CreateEnergyForm = ({
           accept="image/*"
           onChange={(e) => handleFileChange(e, "back")}
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          className="w-full px-4 py-2 bg-[#232029] border-2 border-[#3a3840] text-[#EBDFF0] rounded-lg focus:outline-none focus:border-[#df93ff] transition-colors file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-[#df93ff] file:text-[#1a1820] file:font-semibold hover:file:bg-[#EBDFF0]"
         />
         {backPreview && (
           <div className="mt-4">
@@ -177,7 +177,7 @@ const CreateEnergyForm = ({
       <div className="flex gap-4 pt-4">
         <button
           type="submit"
-          className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          className="flex-1 bg-[#df93ff] text-[#1a1820] py-3 px-6 rounded-lg hover:bg-[#EBDFF0] transition-colors font-semibold"
         >
           Créer l'énergie
         </button>
@@ -185,7 +185,7 @@ const CreateEnergyForm = ({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+            className="flex-1 bg-[#2a2830] text-[#EBDFF0] py-3 px-6 rounded-lg hover:bg-[#3a3840] transition-colors font-medium"
           >
             Annuler
           </button>

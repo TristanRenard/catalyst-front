@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { privateAPI } from "~/utils/privateAPI";
 
-// Type correspondant à votre schéma
 interface User {
   id: string;
   username: string | null;
@@ -12,8 +11,6 @@ interface User {
   createdAt: Date;
   ratio: number;
 }
-
-const API_BASE_URL = 'http://localhost:5173/api';
 
 export const UserTable = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -27,19 +24,18 @@ export const UserTable = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const apiSecret = localStorage.getItem('X-API-Secret');
-      const response = await axios.get(`${API_BASE_URL}/admin/users`, {
+      const apiSecret = localStorage.getItem("adminToken");
+      const response = await privateAPI.get(`/users`, {
         headers: {
-          'X-API-Secret': apiSecret || '',
+          "X-API-Secret": apiSecret || "",
         },
       });
-      // Adapter selon la structure de réponse de l'API
       const data = response.data;
       setUsers(Array.isArray(data) ? data : data.users || []);
       setError(null);
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Erreur lors du chargement des utilisateurs");
+      if (err instanceof Error) {
+        setError(err.message || "Erreur lors du chargement des utilisateurs");
       } else {
         setError("Une erreur inconnue est survenue");
       }
@@ -61,49 +57,49 @@ export const UserTable = () => {
 
   return (
     <>
-      {/* Loading State */}
       {loading && (
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#fe5c5c]"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#df93ff]"></div>
+          <p className="mt-4 text-[#EBDFF0] opacity-70">Chargement...</p>
         </div>
       )}
 
-      {/* Error State */}
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
+        <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-4">
           {error}
         </div>
       )}
 
-      {/* Table */}
       {!loading && !error && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-[#2a2830] rounded-2xl border border-[#3a3840] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-100 dark:bg-gray-700">
+              <thead className="bg-[#232029]">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-[#EBDFF0] uppercase tracking-wider">
                     Username
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-[#EBDFF0] uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-[#EBDFF0] uppercase tracking-wider">
                     Vérifié
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-[#EBDFF0] uppercase tracking-wider">
                     Ratio
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-[#EBDFF0] uppercase tracking-wider">
                     Créé le
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-[#3a3840]">
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                    <td
+                      colSpan={5}
+                      className="px-6 py-8 text-center text-[#EBDFF0] opacity-70"
+                    >
                       Aucun utilisateur trouvé
                     </td>
                   </tr>
@@ -111,36 +107,36 @@ export const UserTable = () => {
                   users.map((user) => (
                     <tr
                       key={user.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="hover:bg-[#3a3840] transition-colors"
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        <span className="text-sm font-medium text-[#EBDFF0]">
                           {user.username || "—"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                        <span className="text-sm text-[#EBDFF0] opacity-70">
                           {user.email || "—"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {user.verifiedAt ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-300">
                             ✓ Vérifié
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-900 text-yellow-300">
                             En attente
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                        <span className="text-sm text-[#EBDFF0] opacity-70">
                           {user.ratio.toFixed(2)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                        <span className="text-sm text-[#EBDFF0] opacity-70">
                           {formatDate(user.createdAt)}
                         </span>
                       </td>
@@ -151,11 +147,11 @@ export const UserTable = () => {
             </table>
           </div>
 
-          {/* Stats Footer */}
           {users.length > 0 && (
-            <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-200 dark:border-gray-600">
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Total : <span className="font-semibold">{users.length}</span> utilisateur(s)
+            <div className="bg-[#232029] px-6 py-4 border-t border-[#3a3840]">
+              <p className="text-sm text-[#EBDFF0] opacity-70">
+                Total : <span className="font-semibold">{users.length}</span>{" "}
+                utilisateur(s)
               </p>
             </div>
           )}
