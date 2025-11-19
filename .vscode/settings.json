@@ -1,0 +1,198 @@
+{
+  "GitLive.Special branches": "main|master|trunk|dev|develop|qa|test|release[-/].*",
+  "GitLive.Issue tracker integration": "Disabled",
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": false,
+    "markdown": true,
+    "scminput": false,
+    "javascript": false,
+    "python": true,
+    "ignore": true,
+    "javascriptreact": true,
+    "html": true,
+    "glsl": true,
+    "typescriptreact": true,
+    "php": true
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+  },
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "gitlens.advanced.messages": {
+    "suppressCreatePullRequestPrompt": true
+  },
+  "audioCues.lineHasBr. eakpoint": "off",
+  "editor.accessibilitySupport": "off",
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "editor.wordWrap": "wordWrapColumn",
+  "files.autoSave": "onFocusChange",
+  "files.enablePreview": false,
+  "editor.wordWrapColumn": 160,
+  "editor.formatOnSave": true,
+  "editor.minimap.enabled": false,
+  "codesandbox.currentWorkspace": "52d34c22-92c1-4493-b9bc-23665445e4ad",
+  "remote.SSH.remotePlatform": {
+    "sandbox.8vnyjs.csb": "linux"
+  },
+  "window.zoomLevel": 2,
+  "[markdown]": {
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+  },
+  "accessibility.signals.lineHasError": {
+    "sound": "off"
+  },
+  "accessibility.signals.lineHasFoldedArea": {
+    "sound": "off"
+  },
+  "accessibility.signals.lineHasInlineSuggestion": {
+    "sound": "off"
+  },
+  "accessibility.signals.terminalQuickFix": {
+    "sound": "off"
+  },
+  "accessibility.signals.onDebugBreak": {
+    "sound": "off"
+  },
+  "accessibility.signals.noInlayHints": {
+    "sound": "off"
+  },
+  "accessibility.signals.taskCompleted": {
+    "sound": "off"
+  },
+  "accessibility.signals.taskFailed": {
+    "sound": "off"
+  },
+  "accessibility.signals.terminalCommandFailed": {
+    "sound": "off"
+  },
+  "accessibility.signals.notebookCellCompleted": {
+    "sound": "off"
+  },
+  "accessibility.signals.notebookCellFailed": {
+    "sound": "off"
+  },
+  "accessibility.signals.diffLineInserted": {
+    "sound": "off"
+  },
+  "accessibility.signals.diffLineDeleted": {
+    "sound": "off"
+  },
+  "accessibility.signals.diffLineModified": {
+    "sound": "off"
+  },
+  "git.confirmSync": false,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "diffEditor.ignoreTrimWhitespace": false,
+  "terminal.integrated.env.osx": {},
+  "workbench.editor.limit.enabled": true,
+  "workbench.editor.limit.value": 5,
+  "cSpell.userWords": [
+    "aashutoshrathi",
+    "alloc",
+    "asynciterator",
+    "autoprefixer",
+    "axios",
+    "bettermaps",
+    "camelcase",
+    "CARDHEIGHT",
+    "clsx",
+    "codesandbox",
+    "commitlint",
+    "deletation",
+    "Dosis",
+    "drei",
+    "dribbble",
+    "eakpoint",
+    "espree",
+    "formik",
+    "glsl",
+    "gsap",
+    "headlessui",
+    "helvetiker",
+    "heroicons",
+    "jsonwebtoken",
+    "linebreak",
+    "minimatch",
+    "nonconstructor",
+    "plusplus",
+    "postcss",
+    "proto",
+    "regexs",
+    "scminput",
+    "sendgrid",
+    "tailwindcss",
+    "tarteaucitron",
+    "trimstart",
+    "verfiy",
+    "vnyjs",
+    "yzhang"
+  ],
+  "console-ninja.featureSet": "Community",
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "prisma.showPrismaDataPlatformNotification": false,
+  "editor.tabSize": 2,
+  "[css]": {
+    "editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
+  },
+  "javascript.format.semicolons": "remove",
+  "typescript.format.semicolons": "remove",
+  "github.copilot.editor.enableAutoCompletions": true,
+  "vscord.status.idle.check": false,
+  "vscord.status.idle.enabled": false,
+  "vscord.status.problems.enabled": false,
+  "vscord.status.details.enabled": false,
+  "vscord.status.details.idle.enabled": false,
+  "[scss]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
+  },
+  "diffEditor.useInlineViewWhenSpaceIsLimited": false,
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "workbench.colorTheme": "Default Light Modern",
+  "terminal.integrated.persistentSessionScrollback": 1000,
+  "terminal.integrated.scrollback": 10000,
+  "editor.largeFileOptimizations": false,
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "javascript.suggest.autoImports": true,
+  "window.autoDetectColorScheme": true,
+  "json.schemas": [],
+  "window.systemColorTheme": "dark",
+  "javascript.preferences.organizeImports": { "typeOrder": "first" },
+  "editor.defaultFormatter": "vscode.typescript-language-features",
+  "[dockercompose]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-docker"
+  },
+  "[dockerfile]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-docker"
+  },
+  "editor.foldingImportsByDefault": true,
+  "dotnet.formatting.organizeImportsOnFormat": true,
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "typescript.preferences.preferTypeOnlyAutoImports": true,
+  "git.suggestSmartCommit": false,
+  "github.copilot.nextEditSuggestions.enabled": false,
+  "terminal.integrated.stickyScroll.enabled": false,
+  "editor.fontFamily": "'ZedMono Nerd Font Mono', 'ZedMono Nerd Font', monospace",
+  "workbench.settings.applyToAllProfiles": [
+    "editor.fontFamily"
+  ],
+  "typescript.updateImportsOnFileMove.enabled": "always"
+}
