@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ImageLibrarySelector } from "./ImageLibrarySelector";
 
 interface CreateEnergyFormProps {
   onSubmit?: (data: EnergyCardFormData) => void;
@@ -9,8 +10,8 @@ interface EnergyCardFormData {
   name: string;
   color: string;
   quota: number;
-  frontImage: File | null;
-  backImage: File | null;
+  frontImageId: string | null;
+  backImageId: string | null;
 }
 
 const CreateEnergyForm = ({
@@ -21,12 +22,9 @@ const CreateEnergyForm = ({
     name: "",
     color: "#000000",
     quota: 0,
-    frontImage: null,
-    backImage: null,
+    frontImageId: null,
+    backImageId: null,
   });
-
-  const [frontPreview, setFrontPreview] = useState<string>("");
-  const [backPreview, setBackPreview] = useState<string>("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -36,24 +34,12 @@ const CreateEnergyForm = ({
     }));
   };
 
-  const handleFileChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    type: "front" | "back"
-  ) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (type === "front") {
-          setFrontPreview(reader.result as string);
-          setFormData((prev) => ({ ...prev, frontImage: file }));
-        } else {
-          setBackPreview(reader.result as string);
-          setFormData((prev) => ({ ...prev, backImage: file }));
-        }
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleFrontImageSelect = (imageId: string) => {
+    setFormData((prev) => ({ ...prev, frontImageId: imageId }));
+  };
+
+  const handleBackImageSelect = (imageId: string) => {
+    setFormData((prev) => ({ ...prev, backImageId: imageId }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -122,57 +108,17 @@ const CreateEnergyForm = ({
         />
       </div>
 
-      <div>
-        <label
-          htmlFor="frontImage"
-          className="block text-sm font-medium text-[#EBDFF0] mb-2"
-        >
-          Image avant de la carte *
-        </label>
-        <input
-          type="file"
-          id="frontImage"
-          accept="image/*"
-          onChange={(e) => handleFileChange(e, "front")}
-          required
-          className="w-full px-4 py-2 bg-[#232029] border-2 border-[#3a3840] text-[#EBDFF0] rounded-lg focus:outline-none focus:border-[#df93ff] transition-colors file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-[#df93ff] file:text-[#1a1820] file:font-semibold hover:file:bg-[#EBDFF0]"
-        />
-        {frontPreview && (
-          <div className="mt-4">
-            <img
-              src={frontPreview}
-              alt="Preview front"
-              className="max-w-xs rounded-lg shadow-md"
-            />
-          </div>
-        )}
-      </div>
+      <ImageLibrarySelector
+        label="Image avant de la carte"
+        onSelectImage={handleFrontImageSelect}
+        selectedImageId={formData.frontImageId || undefined}
+      />
 
-      <div>
-        <label
-          htmlFor="backImage"
-          className="block text-sm font-medium text-[#EBDFF0] mb-2"
-        >
-          Image arrière de la carte *
-        </label>
-        <input
-          type="file"
-          id="backImage"
-          accept="image/*"
-          onChange={(e) => handleFileChange(e, "back")}
-          required
-          className="w-full px-4 py-2 bg-[#232029] border-2 border-[#3a3840] text-[#EBDFF0] rounded-lg focus:outline-none focus:border-[#df93ff] transition-colors file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-[#df93ff] file:text-[#1a1820] file:font-semibold hover:file:bg-[#EBDFF0]"
-        />
-        {backPreview && (
-          <div className="mt-4">
-            <img
-              src={backPreview}
-              alt="Preview back"
-              className="max-w-xs rounded-lg shadow-md"
-            />
-          </div>
-        )}
-      </div>
+      <ImageLibrarySelector
+        label="Image arrière de la carte"
+        onSelectImage={handleBackImageSelect}
+        selectedImageId={formData.backImageId || undefined}
+      />
 
       <div className="flex gap-4 pt-4">
         <button
