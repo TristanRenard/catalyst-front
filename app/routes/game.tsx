@@ -1,10 +1,5 @@
-import type { Route } from "../+types/root";
-
-export const meta = ({}: Route.MetaArgs) => {
-  return [
-    { title: "Game - Catalyst" },
-    { name: "description", content: "Play the Catalyst game" },
-  ];
+export const meta = () => {
+  return [{ title: "Game - Catalyst" }];
 };
 
 const GamePage = () => {

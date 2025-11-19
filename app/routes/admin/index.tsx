@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import type { Route } from "../../+types/root";
 export const meta = ({}: Route.MetaArgs) => {    
     return [
@@ -21,3 +22,14 @@ const AdminPage = () => {
 };
 
 export default AdminPage;
+=======
+export const meta = () => {
+  return [{ title: "Admin - Catalyst" }];
+};
+
+const AdminPage = () => {
+  return <div>Admin Page</div>;
+};
+
+export default AdminPage;
+>>>>>>> d5db8ee (feat: Add admin token modal and related hooks for admin authentication)
