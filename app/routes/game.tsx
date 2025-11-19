@@ -9,7 +9,7 @@ export const meta = ({}: Route.MetaArgs) => {
 
 const GamePage = () => {
   return (
-    <div className="h-screen w-full bg-green-800 flex flex-col justify-between p-8">
+    <div className="h-screen w-full flex flex-col justify-between p-8" style={{ backgroundColor: '#232029' }}>
       <div className="flex justify-center gap-4">
         {[1, 2].map((i) => (
           <div
