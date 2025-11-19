@@ -30,6 +30,7 @@ const AdminLayout = () => {
     { path: "/admin/cards", label: "Gérer les cartes", icon: "🃏" },
     { path: "/admin/games/history", label: "Parties", icon: "🎮" },
     { path: "/admin/users", label: "Utilisateurs", icon: "👥" },
+    { path: "/admin/library", label: "Bibliothèque", icon: "📚" },
   ];
 
   return (

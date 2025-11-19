@@ -47,7 +47,7 @@ const CreateEnergySituationCardForm = ({
       <div>
         <label
           htmlFor="cardId"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
         >
           ID de la carte *
         </label>
@@ -58,7 +58,7 @@ const CreateEnergySituationCardForm = ({
           value={formData.cardId}
           onChange={handleInputChange}
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#fe5c5c] focus:border-transparent"
           placeholder="Ex: card_001"
         />
       </div>
@@ -66,7 +66,7 @@ const CreateEnergySituationCardForm = ({
       <div>
         <label
           htmlFor="quota"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
         >
           Quota *
         </label>
@@ -78,7 +78,7 @@ const CreateEnergySituationCardForm = ({
           onChange={handleInputChange}
           required
           min="0"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#fe5c5c] focus:border-transparent"
           placeholder="Ex: 5"
         />
       </div>
@@ -87,7 +87,7 @@ const CreateEnergySituationCardForm = ({
         <div>
           <label
             htmlFor="energy1Id"
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
           >
             Énergie 1 ID
           </label>
@@ -97,7 +97,7 @@ const CreateEnergySituationCardForm = ({
             name="energy1Id"
             value={formData.energy1Id}
             onChange={handleInputChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#fe5c5c] focus:border-transparent"
             placeholder="Ex: energy_001"
           />
         </div>
@@ -105,7 +105,7 @@ const CreateEnergySituationCardForm = ({
         <div>
           <label
             htmlFor="energy2Id"
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
           >
             Énergie 2 ID
           </label>
@@ -115,7 +115,7 @@ const CreateEnergySituationCardForm = ({
             name="energy2Id"
             value={formData.energy2Id}
             onChange={handleInputChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#fe5c5c] focus:border-transparent"
             placeholder="Ex: energy_002"
           />
         </div>
@@ -123,7 +123,7 @@ const CreateEnergySituationCardForm = ({
         <div>
           <label
             htmlFor="energy3Id"
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
           >
             Énergie 3 ID
           </label>
@@ -133,7 +133,7 @@ const CreateEnergySituationCardForm = ({
             name="energy3Id"
             value={formData.energy3Id}
             onChange={handleInputChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#fe5c5c] focus:border-transparent"
             placeholder="Ex: energy_003"
           />
         </div>
@@ -141,7 +141,7 @@ const CreateEnergySituationCardForm = ({
         <div>
           <label
             htmlFor="energy4Id"
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
           >
             Énergie 4 ID
           </label>
@@ -151,7 +151,7 @@ const CreateEnergySituationCardForm = ({
             name="energy4Id"
             value={formData.energy4Id}
             onChange={handleInputChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#fe5c5c] focus:border-transparent"
             placeholder="Ex: energy_004"
           />
         </div>
@@ -159,7 +159,7 @@ const CreateEnergySituationCardForm = ({
         <div>
           <label
             htmlFor="energy5Id"
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2"
           >
             Énergie 5 ID
           </label>
@@ -169,7 +169,7 @@ const CreateEnergySituationCardForm = ({
             name="energy5Id"
             value={formData.energy5Id}
             onChange={handleInputChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-[#fe5c5c] focus:border-transparent"
             placeholder="Ex: energy_005"
           />
         </div>
@@ -178,7 +178,7 @@ const CreateEnergySituationCardForm = ({
       <div className="flex gap-4 pt-4">
         <button
           type="submit"
-          className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors font-medium"
+          className="flex-1 bg-[#fe5c5c] text-white py-3 px-6 rounded-lg hover:bg-[#ff7676] transition-colors font-medium"
         >
           Créer la carte
         </button>
@@ -186,7 +186,7 @@ const CreateEnergySituationCardForm = ({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+            className="flex-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 py-3 px-6 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors font-medium"
           >
             Annuler
           </button>

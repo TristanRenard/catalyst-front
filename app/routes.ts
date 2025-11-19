@@ -16,5 +16,7 @@ export default [
     route("admin/energies/create", "routes/admin/energies/create.tsx"),
     route("admin/cards/create", "routes/admin/cards/create.tsx"),
     route("admin/games/history", "routes/admin/games/history.tsx"),
+    route("admin/users", "routes/admin/users/index.tsx"),
+    route("admin/library", "routes/admin/library/index.tsx"),
   ]),
 ] satisfies RouteConfig;
