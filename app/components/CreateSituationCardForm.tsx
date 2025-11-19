@@ -41,7 +41,7 @@ const CreateSituationCardForm = ({
   const fetchLibraryImages = async () => {
     try {
       setLoadingImages(true);
-      const apiSecret = localStorage.getItem('X-API-Secret');
+      const apiSecret = localStorage.getItem('adminToken');
       const response = await axios.get<ImageItem[] | { images: ImageItem[] }>(`${API_BASE_URL}/image`, {
         headers: {
           'X-API-Secret': apiSecret || '',

@@ -42,7 +42,7 @@ export const ImageUpload = ({ onUploadSuccess, label = "Image" }: ImageUploadPro
       const formData = new FormData();
       formData.append('file', file);
 
-      const apiSecret = localStorage.getItem('X-API-Secret');
+      const apiSecret = localStorage.getItem('adminToken');
       const response = await publicAPI.post(`api/image/upload`, formData, {
         headers: {
           'X-API-Secret': apiSecret || '',

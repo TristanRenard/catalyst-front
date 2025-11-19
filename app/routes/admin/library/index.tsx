@@ -33,7 +33,7 @@ const LibraryPage = () => {
   const fetchImages = async () => {
     try {
       setLoading(true);
-      const apiSecret = localStorage.getItem('X-API-Secret');
+      const apiSecret = localStorage.getItem('adminToken');
       const response = await axios.get<ImageItem[] | { images: ImageItem[] }>(`${API_BASE_URL}/image`, {
         headers: {
           'X-API-Secret': apiSecret || '',
@@ -79,7 +79,7 @@ const LibraryPage = () => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const apiSecret = localStorage.getItem('X-API-Secret');
+      const apiSecret = localStorage.getItem('adminToken');
       await publicAPI.post(`api/image/upload`, formData, {
         headers: {
           'X-API-Secret': apiSecret || '',
@@ -123,7 +123,7 @@ const LibraryPage = () => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cette image ?")) return;
 
     try {
-      const apiSecret = localStorage.getItem('X-API-Secret');
+      const apiSecret = localStorage.getItem('adminToken');
       await axios.delete(`${API_BASE_URL}/image/${imageId}`, {
         headers: {
           'X-API-Secret': apiSecret || '',

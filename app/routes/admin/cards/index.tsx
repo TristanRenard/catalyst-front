@@ -10,15 +10,19 @@ export const meta = () => {
 
 const CardsPage = () => {
   const [situationCards, setSituationCards] = useState<SituationCard[]>([]);
-  const [energySituationCards, setEnergySituationCards] = useState<EnergySituationCard[]>([]);
+  const [energySituationCards, setEnergySituationCards] = useState<
+    EnergySituationCard[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"situation" | "energy">("situation");
+  const [activeTab, setActiveTab] = useState<"situation" | "energy">(
+    "situation"
+  );
   const adminToken = useAdminToken();
 
   useEffect(() => {
     if (!adminToken) return;
-    
+
     fetchCards();
   }, [adminToken]);
 
@@ -26,7 +30,7 @@ const CardsPage = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const [situationResponse, energyResponse] = await Promise.all([
         publicAPI.get("/api/situation-card", {
           headers: { "X-API-Secret": adminToken || "" },
@@ -36,8 +40,12 @@ const CardsPage = () => {
         }),
       ]);
 
-      setSituationCards(Array.isArray(situationResponse.data) ? situationResponse.data : []);
-      setEnergySituationCards(Array.isArray(energyResponse.data) ? energyResponse.data : []);
+      setSituationCards(
+        Array.isArray(situationResponse.data) ? situationResponse.data : []
+      );
+      setEnergySituationCards(
+        Array.isArray(energyResponse.data) ? energyResponse.data : []
+      );
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message || "Erreur lors du chargement des cartes");
@@ -49,7 +57,8 @@ const CardsPage = () => {
     }
   };
 
-  const currentCards = activeTab === "situation" ? situationCards : energySituationCards;
+  const currentCards =
+    activeTab === "situation" ? situationCards : energySituationCards;
 
   return (
     <div>
@@ -105,7 +114,8 @@ const CardsPage = () => {
       {!loading && !error && currentCards.length === 0 && (
         <div className="bg-[#2a2830] rounded-2xl border border-[#3a3840] p-8 text-center">
           <p className="text-[#EBDFF0] opacity-70">
-            Aucune carte {activeTab === "situation" ? "situation" : "énergie"} disponible.
+            Aucune carte {activeTab === "situation" ? "situation" : "énergie"}{" "}
+            disponible.
           </p>
           <Link
             to="/admin/cards/create"
@@ -118,71 +128,83 @@ const CardsPage = () => {
 
       {!loading && !error && currentCards.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {activeTab === "situation" ? (
-            situationCards.map((card) => (
-              <div
-                key={card.id}
-                className="bg-[#2a2830] rounded-2xl border border-[#3a3840] overflow-hidden hover:border-[#df93ff] transition-colors"
-              >
-                <div className="aspect-3/4 relative bg-[#232029]">
-                  {card.frontImageUrl ? (
-                    <img
-                      src={card.frontImageUrl}
-                      alt={`Carte ${card.id}`}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[#EBDFF0] opacity-30">
-                      Pas d'image
-                    </div>
-                  )}
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#EBDFF0] opacity-70">ID Effet:</span>
-                    <span className="text-[#df93ff] font-mono text-xs">
-                      {card.effectId}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            energySituationCards.map((card) => (
-              <div
-                key={card.id}
-                className="bg-[#2a2830] rounded-2xl border border-[#3a3840] p-6 hover:border-[#df93ff] transition-colors"
-              >
-                <div className="mb-4">
-                  <div className="text-xs text-[#EBDFF0] opacity-50 mb-1">
-                    Carte Énergie Situation
-                  </div>
-                  <div className="text-sm text-[#EBDFF0] opacity-70 mb-2">
-                    Quota: <span className="text-[#df93ff] font-semibold">{card.quota}</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="text-xs text-[#EBDFF0] opacity-70">
-                    Carte situation: <span className="font-mono text-[#df93ff]">{card.situationCardId}</span>
-                  </div>
-                  <div className="text-xs text-[#EBDFF0] opacity-70">
-                    Énergies:
-                  </div>
-                  <div className="grid grid-cols-5 gap-1">
-                    {[card.energy1Id, card.energy2Id, card.energy3Id, card.energy4Id, card.energy5Id].map((energyId, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-[#232029] rounded px-2 py-1 text-center text-xs font-mono text-[#df93ff]"
-                        title={energyId}
-                      >
-                        {energyId.slice(0, 4)}...
+          {activeTab === "situation"
+            ? situationCards.map((card) => (
+                <div
+                  key={card.id}
+                  className="bg-[#2a2830] rounded-2xl border border-[#3a3840] overflow-hidden hover:border-[#df93ff] transition-colors"
+                >
+                  <div className="aspect-3/4 relative bg-[#232029]">
+                    {card.frontImageUrl ? (
+                      <img
+                        src={card.frontImageUrl}
+                        alt={`Carte ${card.id}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[#EBDFF0] opacity-30">
+                        Pas d'image
                       </div>
-                    ))}
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-[#EBDFF0] opacity-70">
+                        ID Effet:
+                      </span>
+                      <span className="text-[#df93ff] font-mono text-xs">
+                        {card.effectId}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
+              ))
+            : energySituationCards.map((card) => (
+                <div
+                  key={card.id}
+                  className="bg-[#2a2830] rounded-2xl border border-[#3a3840] p-6 hover:border-[#df93ff] transition-colors"
+                >
+                  <div className="mb-4">
+                    <div className="text-xs text-[#EBDFF0] opacity-50 mb-1">
+                      Carte Énergie Situation
+                    </div>
+                    <div className="text-sm text-[#EBDFF0] opacity-70 mb-2">
+                      Quota:{" "}
+                      <span className="text-[#df93ff] font-semibold">
+                        {card.quota}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-xs text-[#EBDFF0] opacity-70">
+                      Carte situation:{" "}
+                      <span className="font-mono text-[#df93ff]">
+                        {card.situationCardId}
+                      </span>
+                    </div>
+                    <div className="text-xs text-[#EBDFF0] opacity-70">
+                      Énergies:
+                    </div>
+                    <div className="grid grid-cols-5 gap-1">
+                      {[
+                        card.energy1Id,
+                        card.energy2Id,
+                        card.energy3Id,
+                        card.energy4Id,
+                        card.energy5Id,
+                      ].map((energyId, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-[#232029] rounded px-2 py-1 text-center text-xs font-mono text-[#df93ff]"
+                          title={energyId}
+                        >
+                          {energyId.slice(0, 4)}...
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
         </div>
       )}
     </div>

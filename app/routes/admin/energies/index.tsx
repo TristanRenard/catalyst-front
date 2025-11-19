@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import type { Energy } from "~/types/Energy";
 import { useAdminToken } from "~/hooks/useAdminToken";
+import type { Energy } from "~/types/energy";
 import { publicAPI } from "~/utils/publicAPI";
 
 export const meta = () => {
