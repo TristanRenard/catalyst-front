@@ -1,23 +1,34 @@
-import { Link, useNavigate } from "react-router";
-import type { Route } from "./+types/home";
+import { useEffect, useState } from "react"
+import { Link, useNavigate, type MetaArgs } from "react-router"
+import { publicAPI } from "~/utils/publicAPI"
 
-export const meta = ({}: Route.MetaArgs) => {
+export const meta = ({ }: MetaArgs) => {
   return [
     { title: "New React Router App" },
     { name: "description", content: "Welcome to React Router!" },
-  ];
-};
+  ]
+}
 
 const Home = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+
+  const [user, setUser] = useState(null)
+
+
+  useEffect(() => {
+    const res = publicAPI.get("/@me", { withCredentials: true }).then((response) => {
+      setUser(response.data)
+      console.log("Logged in user:", response.data)
+    }).catch((error) => {
+      console.log("Not logged in", error)
+    })
+  }, [])
 
   return (
     <main className="flex items-center justify-center pt-16 pb-4">
       <div className="absolute top-4 right-4">
-        <Link to="/login">
-          <button className="px-6 py-2 bg-[#fe5c5c] text-white font-semibold rounded-lg hover:bg-[#ff7676] transition-colors duration-200 shadow-md hover:shadow-lg">
-            Login
-          </button>
+        <Link to="auth/login" className="px-6 py-2 bg-[#fe5c5c] text-white font-semibold rounded-lg hover:bg-[#ff7676] transition-colors duration-200 shadow-md hover:shadow-lg">
+          Login
         </Link>
       </div>
 
@@ -49,7 +60,7 @@ const Home = () => {
         </button>
       </div>
     </main>
-  );
+  )
 }
 
-export default Home;
+export default Home
