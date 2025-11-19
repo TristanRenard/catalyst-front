@@ -18,5 +18,6 @@ export default [
     route("admin/energies", "routes/admin/energies/index.tsx"),
     route("admin/games/history", "routes/admin/games/history.tsx"),
     route("admin/users", "routes/admin/users/index.tsx"),
+    route("admin/library", "routes/admin/library/index.tsx"),
   ]),
 ] satisfies RouteConfig;
