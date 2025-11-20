@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react"
 import { Link, Outlet, useLocation } from "react-router"
 import AdminTokenModal from "~/components/AdminTokenModal"
 import { useAdminToken } from "~/hooks/useAdminToken"
-import { publicAPI } from "~/utils/publicAPI"
 
 const AdminLayout = () => {
   const location = useLocation()
@@ -24,15 +23,20 @@ const AdminLayout = () => {
   useEffect(() => {
     const checkWebSocketHealth = async () => {
       try {
-        // Get session token from /@me endpoint
-        const response = await publicAPI.get<{ user: any; sessionToken?: string }>("/@me")
+        // Get session token from cookie
+        const getCookie = (name: string) => {
+          const value = `; ${document.cookie}`
+          const parts = value.split(`; ${name}=`)
+          if (parts.length === 2) return parts.pop()?.split(';').shift()
+          return null
+        }
 
-        if (!response.data.user || !response.data.sessionToken) {
+        const sessionToken = getCookie('catalystSession')
+
+        if (!sessionToken) {
           setWsActive(false)
           return
         }
-
-        const sessionToken = response.data.sessionToken
 
         // Create WebSocket connection with Authorization token in URL
         const ws = new WebSocket(`ws://localhost:5173/ws?token=${sessionToken}`)

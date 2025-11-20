@@ -6,12 +6,13 @@ import tsconfigPaths from "vite-tsconfig-paths"
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
   server: {
+    allowedHosts: ["*", "local.tristan-renard.com"],
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-        ws: true,
+        target: process.env.API_URL,
+        changeOrigin: process.env.API_CHANGE_ORIGIN,
+        secure: process.env.API_SECURE,
+        ws: process.env.API_WS,
         configure: (proxy) => {
           proxy.on('error', (err, req) => {
             console.log('❌ Proxy error:', err)
@@ -25,10 +26,10 @@ export default defineConfig({
         },
       },
       '/ws': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-        ws: true,
+        target: process.env.WS_URL,
+        changeOrigin: process.env.WS_CHANGE_ORIGIN,
+        secure: process.env.WS_SECURE,
+        ws: process.env.WS_WS,
         configure: (proxy) => {
           proxy.on('error', (err, req) => {
             console.log('❌ WebSocket proxy error:', err)

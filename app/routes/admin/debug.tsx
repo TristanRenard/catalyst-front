@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react"
-import { publicAPI } from "~/utils/publicAPI"
+import { useEffect, useRef, useState } from "react"
+import { fetchSessionToken } from "~/utils/fetchSessionToken"
 
 export const meta = () => {
   return [{ title: "Debug WebSocket - Catalyst" }]
@@ -24,17 +24,11 @@ const DebugPage = () => {
 
   // Fetch session token on mount
   useEffect(() => {
-    const fetchSessionToken = async () => {
-      try {
-        const response = await publicAPI.get<{ user: any; sessionToken?: string }>("/@me")
-        if (response.data.sessionToken) {
-          setSessionToken(response.data.sessionToken)
-        }
-      } catch (err) {
-        console.error("Erreur lors de la récupération du session token:", err)
-      }
+    const loadToken = async () => {
+      const token = await fetchSessionToken()
+      setSessionToken(token || "")
     }
-    fetchSessionToken()
+    loadToken()
   }, [])
 
   useEffect(() => {
@@ -217,11 +211,10 @@ const DebugPage = () => {
             </button>
           </div>
 
-          <div className={`px-4 py-2 rounded-lg text-sm font-medium ${
-            connected
-              ? "bg-green-900/30 text-green-400 border border-green-700"
-              : "bg-gray-900/30 text-gray-400 border border-gray-700"
-          }`}>
+          <div className={`px-4 py-2 rounded-lg text-sm font-medium ${connected
+            ? "bg-green-900/30 text-green-400 border border-green-700"
+            : "bg-gray-900/30 text-gray-400 border border-gray-700"
+            }`}>
             Statut: {connected ? "✅ Connecté" : "❌ Déconnecté"}
           </div>
         </div>
@@ -318,20 +311,18 @@ const DebugPage = () => {
             messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`p-4 rounded-lg border ${
-                  msg.direction === "sent"
-                    ? "bg-blue-900/20 border-blue-700/50"
-                    : "bg-green-900/20 border-green-700/50"
-                }`}
+                className={`p-4 rounded-lg border ${msg.direction === "sent"
+                  ? "bg-blue-900/20 border-blue-700/50"
+                  : "bg-green-900/20 border-green-700/50"
+                  }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">
                       {msg.direction === "sent" ? "↗️" : "↙️"}
                     </span>
-                    <span className={`font-semibold ${
-                      msg.direction === "sent" ? "text-blue-400" : "text-green-400"
-                    }`}>
+                    <span className={`font-semibold ${msg.direction === "sent" ? "text-blue-400" : "text-green-400"
+                      }`}>
                       {msg.direction === "sent" ? "Envoyé" : "Reçu"}
                     </span>
                     <span className="text-[#EBDFF0] font-mono text-sm">

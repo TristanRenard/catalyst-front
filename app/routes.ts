@@ -8,7 +8,6 @@ import {
 export default [
     index("routes/index.tsx"),
     route("rules", "routes/rules.tsx"),
-    route("lobby", "routes/lobby.tsx"),
     route("game", "routes/game.tsx"),
     route("auth/login", "routes/auth/login.tsx"),
     route("auth/verify/:token", "routes/auth/verify.$token.tsx"),
