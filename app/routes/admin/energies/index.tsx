@@ -1,45 +1,65 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router";
-import { useAdminToken } from "~/hooks/useAdminToken";
-import type { Energy } from "~/types/energy";
-import { publicAPI } from "~/utils/publicAPI";
+import { useEffect, useState } from "react"
+import { Link } from "react-router"
+import { useAdminToken } from "~/hooks/useAdminToken"
+import type { Energy } from "~/types/energy"
+import { publicAPI } from "~/utils/publicAPI"
 
 export const meta = () => {
-  return [{ title: "Énergies - Catalyst" }];
-};
+  return [{ title: "Énergies - Catalyst" }]
+}
 
 const EnergiesPage = () => {
-  const [energies, setEnergies] = useState<Energy[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const adminToken = useAdminToken();
+  const [energies, setEnergies] = useState<Energy[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const adminToken = useAdminToken()
 
   useEffect(() => {
-    if (!adminToken) return;
-    
-    fetchEnergies();
-  }, [adminToken]);
+    if (!adminToken) return
+
+    fetchEnergies()
+  }, [adminToken])
 
   const fetchEnergies = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      const { data } = await publicAPI.get("/api/energie", {
+      setLoading(true)
+      setError(null)
+      const { data } = await publicAPI.get("/energie", {
         headers: {
           "X-API-Secret": adminToken || "",
         },
-      });
-      setEnergies(Array.isArray(data) ? data : []);
+      })
+      console.log(data)
+      setEnergies(data ? data.energies : [])
     } catch (err) {
       if (err instanceof Error) {
-        setError(err.message || "Erreur lors du chargement des énergies");
+        setError(err.message || "Erreur lors du chargement des énergies")
       } else {
-        setError("Une erreur inconnue est survenue");
+        setError("Une erreur inconnue est survenue")
       }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette énergie ?")) return
+
+    try {
+      await publicAPI.delete(`/energie/${id}`, {
+        headers: {
+          "X-API-Secret": adminToken || "",
+        },
+      })
+      fetchEnergies()
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message || "Erreur lors de la suppression de l'énergie")
+      } else {
+        setError("Une erreur inconnue est survenue")
+      }
+    }
+  }
 
   return (
     <div>
@@ -88,9 +108,9 @@ const EnergiesPage = () => {
               className="bg-[#2a2830] rounded-2xl border border-[#3a3840] overflow-hidden hover:border-[#df93ff] transition-colors"
             >
               <div className="aspect-3/4 relative bg-[#232029]">
-                {energy.frontImageUrl ? (
+                {energy.frontImage ? (
                   <img
-                    src={energy.frontImageUrl}
+                    src={`/api/image/${energy.frontImage}`}
                     alt={energy.name}
                     className="w-full h-full object-cover"
                   />
@@ -111,11 +131,19 @@ const EnergiesPage = () => {
                     title={energy.color}
                   />
                 </div>
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between text-sm mb-4">
                   <span className="text-[#EBDFF0] opacity-70">Quota:</span>
                   <span className="text-[#df93ff] font-semibold">
                     {energy.quota}
                   </span>
+                </div>
+                <div className="pt-4 border-t border-[#3a3840]">
+                  <button
+                    onClick={() => handleDelete(energy.id)}
+                    className="w-full bg-red-900/30 hover:bg-red-900/50 text-red-400 py-2 px-4 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    Supprimer
+                  </button>
                 </div>
               </div>
             </div>
@@ -123,7 +151,7 @@ const EnergiesPage = () => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default EnergiesPage;
+export default EnergiesPage

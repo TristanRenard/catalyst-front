@@ -1,143 +1,141 @@
-import { Link } from "react-router";
-import { useState, useEffect, useRef } from "react";
-import axios from "axios";
-import { publicAPI } from "~/utils/publicAPI";
+import axios from "axios"
+import { useEffect, useRef, useState } from "react"
+import { Link } from "react-router"
+import { publicAPI } from "~/utils/publicAPI"
 
 export const meta = () => {
   return [
     { title: "Bibliothèque - Catalyst" },
     { name: "description", content: "Gestion de la bibliothèque d'images" },
-  ];
-};
-
-interface ImageItem {
-  id: string;
-  url: string;
-  filename: string;
-  createdAt: string;
+  ]
 }
 
-const API_BASE_URL = 'http://localhost:5173/api';
+interface ImageItem {
+  id: string
+  url: string
+  filename: string
+  createdAt: string
+}
 
 const LibraryPage = () => {
-  const [images, setImages] = useState<ImageItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [images, setImages] = useState<ImageItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    fetchImages();
-  }, []);
+    fetchImages()
+  }, [])
 
   const fetchImages = async () => {
     try {
-      setLoading(true);
-      const apiSecret = localStorage.getItem('adminToken');
-      const response = await axios.get<ImageItem[] | { images: ImageItem[] }>(`${API_BASE_URL}/image`, {
+      setLoading(true)
+      const apiSecret = localStorage.getItem('adminToken')
+      const response = await publicAPI.get<ImageItem[] | { images: ImageItem[] }>(`/image`, {
         headers: {
           'X-API-Secret': apiSecret || '',
         },
-      });
-      const data = response.data;
-      setImages(Array.isArray(data) ? data : data.images || []);
-      setError(null);
+      })
+      const data = response.data
+      setImages(Array.isArray(data) ? data : data.images || [])
+      setError(null)
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Erreur lors du chargement des images");
+        setError(err.response?.data?.message || "Erreur lors du chargement des images")
       } else {
-        setError("Une erreur inconnue est survenue");
+        setError("Une erreur inconnue est survenue")
       }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
+    const files = event.target.files
+    if (!files || files.length === 0) return
 
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/')) {
-        setError("Veuillez sélectionner uniquement des images");
-        continue;
+        setError("Veuillez sélectionner uniquement des images")
+        continue
       }
-      await uploadImage(file);
+      await uploadImage(file)
     }
 
     // Reset input
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = ''
     }
-  };
+  }
 
   const uploadImage = async (file: File) => {
     try {
-      setUploading(true);
-      setError(null);
+      setUploading(true)
+      setError(null)
 
-      const formData = new FormData();
-      formData.append('file', file);
+      const formData = new FormData()
+      formData.append('file', file)
 
-      const apiSecret = localStorage.getItem('adminToken');
-      await publicAPI.post(`api/image/upload`, formData, {
+      const apiSecret = localStorage.getItem('adminToken')
+      await publicAPI.post(`/image/upload`, formData, {
         headers: {
           'X-API-Secret': apiSecret || '',
           'Content-Type': 'multipart/form-data',
         },
-      });
+      })
 
       // Rafraîchir la liste
-      fetchImages();
+      fetchImages()
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Erreur lors de l'upload de l'image");
+        setError(err.response?.data?.message || "Erreur lors de l'upload de l'image")
       } else {
-        setError("Une erreur inconnue est survenue");
+        setError("Une erreur inconnue est survenue")
       }
     } finally {
-      setUploading(false);
+      setUploading(false)
     }
-  };
+  }
 
   const handleClick = () => {
-    fileInputRef.current?.click();
-  };
+    fileInputRef.current?.click()
+  }
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const files = event.dataTransfer.files;
+    event.preventDefault()
+    const files = event.dataTransfer.files
 
     for (const file of Array.from(files)) {
       if (file.type.startsWith('image/')) {
-        await uploadImage(file);
+        await uploadImage(file)
       }
     }
-  };
+  }
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-  };
+    event.preventDefault()
+  }
 
   const deleteImage = async (imageId: string) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cette image ?")) return;
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette image ?")) return
 
     try {
-      const apiSecret = localStorage.getItem('adminToken');
-      await axios.delete(`${API_BASE_URL}/image/${imageId}`, {
+      const apiSecret = localStorage.getItem('adminToken')
+      await publicAPI.delete(`/image/${imageId}`, {
         headers: {
           'X-API-Secret': apiSecret || '',
         },
-      });
-      fetchImages();
+      })
+      fetchImages()
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Erreur lors de la suppression");
+        setError(err.response?.data?.message || "Erreur lors de la suppression")
       } else {
-        setError("Une erreur inconnue est survenue");
+        setError("Une erreur inconnue est survenue")
       }
     }
-  };
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
@@ -242,14 +240,14 @@ const LibraryPage = () => {
                   >
                     <div className="">
                       <img
-                        src={`${API_BASE_URL}/image/${image.id}/thumbnail`}
+                        src={`/api/image/${image.id}/thumbnail`}
                         alt={image.filename}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           // Fallback to original size if thumbnail fails
-                          const target = e.target as HTMLImageElement;
+                          const target = e.target as HTMLImageElement
                           if (!target.src.endsWith(image.id)) {
-                            target.src = `${API_BASE_URL}/image/${image.id}`;
+                            target.src = `/api/image/${image.id}`
                           }
                         }}
                       />
@@ -280,7 +278,7 @@ const LibraryPage = () => {
         )}
       </div>
     </main>
-  );
-};
+  )
+}
 
-export default LibraryPage;
+export default LibraryPage

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router'
 import GameActions from '~/components/GameActions'
 import GameBoard from '~/components/GameBoard'
 import GameStatus from '~/components/GameStatus'
-import { useSession } from '~/hooks/useSession'
 import { useWebSocket } from '~/hooks/useWebsocket'
 import type {
   GameAction,
@@ -13,6 +12,8 @@ import type {
 } from '~/types/socket'
 import {
   determineWinner,
+  getCurrentPlayer,
+  getOpponentPlayer,
   isPlayerTurn,
   validateGameAction
 } from '~/utils/gameLogic'
@@ -24,27 +25,28 @@ export default function GamePage() {
   const [error, setError] = useState<string | null>(null)
   const [isMyTurn, setIsMyTurn] = useState(false)
 
-  // Récupérer la session utilisateur
-  const { sessionToken, isLoading: isLoadingSession } = useSession()
+  // R�cup�rer le token depuis le localStorage
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
 
   const { isConnected, sendGameAction, surrender, connectionState } = useWebSocket({
-    url: import.meta.env.VITE_WS_URL || 'ws://localhost:5173/ws',
-    token: sessionToken || '',
-    autoConnect: !!sessionToken,
+    url: import.meta.env.VITE_WS_URL || 'ws://localhost:3001',
+    token: token || '',
     handlers: {
       onMatchStart: (payload: MatchStartPayload) => {
-        console.log('Match démarré:', payload)
+        console.log('Match demarre:', payload)
         setGameState(payload.gameState)
-        setMyUserId(payload.gameState.player1.userId)
+        setMyUserId(payload.gameState.player1.userId) // Sera d�termin� correctement par le serveur
       },
       onOpponentAction: (payload: unknown) => {
         console.log('Action de l\'adversaire:', payload)
+        // Le serveur nous envoie le nouvel �tat du jeu apr�s l'action de l'adversaire
         if (payload && typeof payload === 'object' && 'gameState' in payload) {
           setGameState((payload as { gameState: GameState }).gameState)
         }
       },
       onMatchEnd: (payload: MatchEndPayload) => {
-        console.log('Match terminé:', payload)
+        console.log('Match termin�:', payload)
+        // Afficher l'�cran de fin de partie
         setTimeout(() => {
           navigate('/lobby')
         }, 5000)
@@ -54,22 +56,30 @@ export default function GamePage() {
         setError(payload.message)
       },
       onDisconnected: () => {
-        console.log('Déconnecté')
+        console.log('D�connect�')
         navigate('/lobby')
       },
     },
   })
 
-  // Mettre à jour isMyTurn quand le gameState change
+  // Mettre � jour isMyTurn quand le gameState change
   useEffect(() => {
     if (gameState && myUserId) {
       setIsMyTurn(isPlayerTurn(gameState, myUserId))
     }
   }, [gameState, myUserId])
 
+  // Rediriger si pas de token
+  useEffect(() => {
+    if (!token) {
+      navigate('/login')
+    }
+  }, [token, navigate])
+
   const handleAction = (action: GameAction) => {
     if (!gameState) return
 
+    // Valider l'action c�t� client avant de l'envoyer
     const validation = validateGameAction(gameState, myUserId, action)
     if (!validation.valid) {
       setError(validation.error || 'Action invalide')
@@ -77,26 +87,15 @@ export default function GamePage() {
       return
     }
 
+    // Envoyer l'action au serveur
     sendGameAction(action)
     setError(null)
   }
 
   const handleSurrender = () => {
-    if (window.confirm('Êtes-vous sûr de vouloir abandonner ?')) {
+    if (window.confirm('�tes-vous s�r de vouloir abandonner ?')) {
       surrender()
     }
-  }
-
-  if (isLoadingSession) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
-        <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 shadow-2xl">
-          <div className="text-white text-center">
-            <div className="text-xl mb-4">Chargement...</div>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   if (!isConnected) {
@@ -124,11 +123,14 @@ export default function GamePage() {
     )
   }
 
+  const currentPlayer = getCurrentPlayer(gameState)
+  const opponentPlayer = getOpponentPlayer(gameState)
   const amIPlayer1 = gameState.player1.userId === myUserId
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="mb-4 flex justify-between items-center">
           <div className="text-white">
             <h1 className="text-3xl font-bold">Catalyst</h1>
@@ -144,6 +146,7 @@ export default function GamePage() {
           </button>
         </div>
 
+        {/* Game Status */}
         <GameStatus
           gameState={gameState}
           myUserId={myUserId}
@@ -151,11 +154,13 @@ export default function GamePage() {
           error={error}
         />
 
+        {/* Game Board */}
         <GameBoard
           gameState={gameState}
           myUserId={myUserId}
         />
 
+        {/* Game Actions */}
         {isMyTurn && gameState.phase !== 'game_over' && (
           <GameActions
             gameState={gameState}
@@ -164,10 +169,11 @@ export default function GamePage() {
           />
         )}
 
+        {/* Game Over Screen */}
         {gameState.phase === 'game_over' && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-white rounded-xl p-8 shadow-2xl max-w-md w-full">
-              <h2 className="text-3xl font-bold mb-4 text-center">Partie terminée !</h2>
+              <h2 className="text-3xl font-bold mb-4 text-center">Partie termin�e !</h2>
               {(() => {
                 const result = determineWinner(gameState)
                 const didIWin =
@@ -179,9 +185,9 @@ export default function GamePage() {
                     {result.winner === 'draw' ? (
                       <div className="text-xl mb-4">Match nul !</div>
                     ) : didIWin ? (
-                      <div className="text-green-600 text-2xl font-bold mb-4">Vous avez gagné ! 🎉</div>
+                      <div className="text-green-600 text-2xl font-bold mb-4">Vous avez gagn� ! </div>
                     ) : (
-                      <div className="text-red-600 text-2xl font-bold mb-4">Vous avez perdu 😢</div>
+                      <div className="text-red-600 text-2xl font-bold mb-4">Vous avez perdu ="</div>
                     )}
                     <div className="mb-4">
                       <div className="flex justify-between mb-2">

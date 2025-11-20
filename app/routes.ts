@@ -7,6 +7,7 @@ import {
 
 export default [
     index("routes/index.tsx"),
+    route("lobby", "routes/lobby.tsx"),
     route("game", "routes/game.tsx"),
     route("auth/login", "routes/auth/login.tsx"),
     route("auth/verify/:token", "routes/auth/verify.$token.tsx"),
@@ -19,8 +20,11 @@ export default [
         route("admin/cards", "routes/admin/cards/index.tsx"),
         route("admin/energies/create", "routes/admin/energies/create.tsx"),
         route("admin/energies", "routes/admin/energies/index.tsx"),
+        route("admin/effects/create", "routes/admin/effects/create.tsx"),
+        route("admin/effects", "routes/admin/effects/index.tsx"),
         route("admin/games/history", "routes/admin/games/history.tsx"),
         route("admin/users", "routes/admin/users/index.tsx"),
         route("admin/library", "routes/admin/library/index.tsx"),
+        route("admin/debug", "routes/admin/debug.tsx"),
     ]),
 ] satisfies RouteConfig

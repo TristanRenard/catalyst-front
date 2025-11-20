@@ -1,17 +1,18 @@
-import { useState } from "react";
-import { ImageLibrarySelector } from "./ImageLibrarySelector";
+import { useState } from "react"
+import { ImageLibrarySelector } from "./ImageLibrarySelector"
 
 interface CreateEnergyFormProps {
-  onSubmit?: (data: EnergyCardFormData) => void;
-  onCancel?: () => void;
+  onSubmit?: (data: EnergyCardFormData) => void
+  onCancel?: () => void
 }
 
 interface EnergyCardFormData {
-  name: string;
-  color: string;
-  quota: number;
-  frontImageId: string | null;
-  backImageId: string | null;
+  name: string
+  color: string
+  quota: number
+  frontImageId: string | null
+  backImageId: string | null
+  pictoImageId?: string | null
 }
 
 const CreateEnergyForm = ({
@@ -24,28 +25,33 @@ const CreateEnergyForm = ({
     quota: 0,
     frontImageId: null,
     backImageId: null,
-  });
+    pictoImageId: null,
+  })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
       [name]: name === "quota" ? parseInt(value) || 0 : value,
-    }));
-  };
+    }))
+  }
 
   const handleFrontImageSelect = (imageId: string) => {
-    setFormData((prev) => ({ ...prev, frontImageId: imageId }));
-  };
+    setFormData((prev) => ({ ...prev, frontImageId: imageId }))
+  }
 
   const handleBackImageSelect = (imageId: string) => {
-    setFormData((prev) => ({ ...prev, backImageId: imageId }));
-  };
+    setFormData((prev) => ({ ...prev, backImageId: imageId }))
+  }
+
+  const handlePictoImageSelect = (imageId: string) => {
+    setFormData((prev) => ({ ...prev, pictoImageId: imageId }))
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit?.(formData);
-  };
+    e.preventDefault()
+    onSubmit?.(formData)
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -84,7 +90,14 @@ const CreateEnergyForm = ({
             onChange={handleInputChange}
             className="h-12 w-24 rounded cursor-pointer"
           />
-          <span className="text-[#EBDFF0]">{formData.color}</span>
+          <input
+            type="text"
+            name="color"
+            value={formData.color}
+            onChange={handleInputChange}
+            className="flex-1 px-4 py-2 bg-[#232029] border-2 border-[#3a3840] text-[#EBDFF0] rounded-lg focus:outline-none focus:border-[#df93ff] transition-colors"
+            placeholder="#000000"
+          />
         </div>
       </div>
 
@@ -119,6 +132,11 @@ const CreateEnergyForm = ({
         onSelectImage={handleBackImageSelect}
         selectedImageId={formData.backImageId || undefined}
       />
+      <ImageLibrarySelector
+        label="Picto de la carte"
+        onSelectImage={handlePictoImageSelect}
+        selectedImageId={formData.pictoImageId || undefined}
+      />
 
       <div className="flex gap-4 pt-4">
         <button
@@ -138,7 +156,7 @@ const CreateEnergyForm = ({
         )}
       </div>
     </form>
-  );
-};
+  )
+}
 
-export default CreateEnergyForm;
+export default CreateEnergyForm

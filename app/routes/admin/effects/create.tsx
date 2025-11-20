@@ -1,37 +1,36 @@
 import axios from "axios"
 import { useState } from "react"
 import { useNavigate } from "react-router"
-import CreateEnergyForm from "~/components/CreateEnergyForm"
-import { useAdminToken } from "~/hooks/useAdminToken"
+import CreateEffectForm from "~/components/CreateEffectForm"
 import { publicAPI } from "~/utils/publicAPI"
 
-const CreateEnergyPage = () => {
+const CreateEffectPage = () => {
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const adminToken = useAdminToken()
 
   const handleSubmit = async (data: any) => {
     try {
       setLoading(true)
       setError(null)
-      await publicAPI.post('energie', {
+
+      const apiSecret = localStorage.getItem('adminToken')
+      await publicAPI.post('effect', {
         name: data.name,
-        color: data.color,
-        quota: data.quota,
-        frontImage: data.frontImageId,
-        backImage: data.backImageId,
-        picto: data.pictoImageId
+        description: data.description,
+        type: data.type,
+        points: data.points,
+        slug: data.slug
       }, {
         headers: {
-          'X-API-Secret': adminToken || '',
+          'X-API-Secret': apiSecret || '',
         },
       })
 
-      navigate("/admin/energies")
+      navigate("/admin/effects")
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Erreur lors de la création de l'énergie")
+        setError(err.response?.data?.error || "Erreur lors de la création de l'effet")
       } else {
         setError("Une erreur inconnue est survenue")
       }
@@ -41,13 +40,13 @@ const CreateEnergyPage = () => {
   }
 
   const handleCancel = () => {
-    navigate("/admin/energies")
+    navigate("/admin/effects")
   }
 
   return (
     <div>
       <h2 className="text-2xl font-bold text-[#EBDFF0] mb-6">
-        Créer une nouvelle énergie
+        Créer un nouvel effet
       </h2>
       {error && (
         <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-6">
@@ -60,10 +59,10 @@ const CreateEnergyPage = () => {
           <p className="mt-4 text-[#8b8693]">Création en cours...</p>
         </div>
       ) : (
-        <CreateEnergyForm onSubmit={handleSubmit} onCancel={handleCancel} />
+        <CreateEffectForm onSubmit={handleSubmit} onCancel={handleCancel} />
       )}
     </div>
   )
 }
 
-export default CreateEnergyPage
+export default CreateEffectPage

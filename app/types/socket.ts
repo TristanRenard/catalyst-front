@@ -76,6 +76,7 @@ export interface MatchStartPayload {
     username: string
   }
   isPrivate: boolean
+  gameState: GameState
 }
 
 // Payload pour match_end
@@ -127,4 +128,138 @@ export interface WebSocketHandlers {
   onConnected?: () => void
   onDisconnected?: () => void
   onConnectionError?: (error: Event) => void
+}
+
+// Types pour le jeu
+
+export interface Energie {
+  id: string
+  name: string
+  color: string
+  quota: number
+  backImage: string
+  frontImage: string
+  picto: string
+}
+
+export interface Effect {
+  id: string
+  name: string
+  description: string
+  type: string
+  points: number
+  slug: string
+}
+
+export interface SituationCard {
+  id: string
+  effectId: string
+  backImage: string
+  frontImage: string
+}
+
+export interface SituationCardWithEnergies {
+  card: SituationCard
+  effect: Effect
+  requiredEnergies: Energie[]
+  quota: number
+}
+
+export interface PlayedSituationCard {
+  situationCard: SituationCardWithEnergies
+  placedEnergies: Energie[]
+  playedBy: "player1" | "player2"
+}
+
+export interface PlayerGameState {
+  userId: string
+  username: string
+  handSituationCards: SituationCardWithEnergies[]
+  handEnergieCards: Energie[]
+  points: number
+  firstToReceivePoints: boolean
+  privateSituationCard: PlayedSituationCard | null
+}
+
+export interface GameState {
+  roomId: string
+  player1: PlayerGameState
+  player2: PlayerGameState
+  commonSituationCard: PlayedSituationCard | null
+  situationDeck: SituationCardWithEnergies[]
+  energieDeck: Energie[]
+  situationDiscard: SituationCardWithEnergies[]
+  energieDiscard: Energie[]
+  currentTurn: number
+  maxTurns: number
+  currentPlayer: "player1" | "player2"
+  phase: "setup" | "drawing_energie" | "placing_energie" | "waiting_effect" | "waiting_replacement" | "game_over"
+  firstPlayerToScore: "player1" | "player2" | null
+  completedSituation?: {
+    type: "common" | "player1_private" | "player2_private"
+    card: SituationCardWithEnergies
+  }
+  createdAt: Date
+  startedAt?: Date
+  finishedAt?: Date
+}
+
+// Actions de jeu
+
+export type GameActionType =
+  | "draw_energie"
+  | "place_energie"
+  | "discard_energie"
+  | "apply_effect"
+  | "replace_situation"
+
+export interface DrawEnergiePayload {
+  fromDiscard: boolean
+}
+
+export interface PlaceEnergiePayload {
+  energieCardIndex: number
+  targetSituation: "common" | "my_private" | "opponent_private"
+}
+
+export interface DiscardEnergiePayload {
+  energieCardIndex: number
+}
+
+export interface ApplyEffectPayload {
+  situationType: "common" | "my_private" | "opponent_private"
+  targetPlayer: "player1" | "player2"
+}
+
+export interface ReplaceSituationPayload {
+  situationType: "common" | "my_private"
+  newSituationCardIndex: number
+}
+
+export interface GameAction {
+  type: GameActionType
+  payload: DrawEnergiePayload | PlaceEnergiePayload | DiscardEnergiePayload | ApplyEffectPayload | ReplaceSituationPayload
+}
+
+export type GameEventType =
+  | "energie_drawn"
+  | "energie_placed"
+  | "energie_discarded"
+  | "situation_completed"
+  | "effect_applied"
+  | "situation_replaced"
+  | "card_drawn"
+  | "turn_changed"
+  | "game_over"
+
+export interface GameEvent {
+  type: GameEventType
+  data: unknown
+}
+
+export interface GameActionResult {
+  success: boolean
+  error?: string
+  gameState?: GameState
+  events?: GameEvent[]
 }
