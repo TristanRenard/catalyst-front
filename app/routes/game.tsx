@@ -17,14 +17,13 @@ import {
   validateGameAction
 } from '~/utils/gameLogic'
 
-export default function GamePage() {
+const GamePage = () => {
   const navigate = useNavigate()
   const [gameState, setGameState] = useState<GameState | null>(null)
   const [myUserId, setMyUserId] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [isMyTurn, setIsMyTurn] = useState(false)
 
-  // Récupérer la session utilisateur
   const { sessionToken, isLoading: isLoadingSession } = useSession()
 
   const { isConnected, sendGameAction, surrender, connectionState } = useWebSocket({
@@ -60,7 +59,6 @@ export default function GamePage() {
     },
   })
 
-  // Mettre à jour isMyTurn quand le gameState change
   useEffect(() => {
     if (gameState && myUserId) {
       setIsMyTurn(isPlayerTurn(gameState, myUserId))
@@ -89,7 +87,7 @@ export default function GamePage() {
 
   if (isLoadingSession) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 shadow-2xl">
           <div className="text-white text-center">
             <div className="text-xl mb-4">Chargement...</div>
@@ -101,7 +99,7 @@ export default function GamePage() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 shadow-2xl">
           <div className="text-white text-center">
             <div className="text-xl mb-4">Connexion au serveur...</div>
@@ -114,7 +112,7 @@ export default function GamePage() {
 
   if (!gameState) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center">
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 shadow-2xl">
           <div className="text-white text-center">
             <div className="text-xl mb-4">En attente de la partie...</div>
@@ -127,7 +125,7 @@ export default function GamePage() {
   const amIPlayer1 = gameState.player1.userId === myUserId
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
+    <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
       <div className="max-w-7xl mx-auto">
         <div className="mb-4 flex justify-between items-center">
           <div className="text-white">
@@ -210,3 +208,5 @@ export default function GamePage() {
     </div>
   )
 }
+
+export default GamePage
