@@ -144,9 +144,9 @@ const Home = () => {
             <div className="relative group">
               <div className="absolute inset-0 bg-[#df93ff]/30 rounded-full blur-3xl group-hover:bg-[#df93ff]/40 transition-all duration-500"></div>
               <img
-                src="/images/Untitled_Artwork 3.png"
+                src="/images/logo.png"
                 alt="Catalyst Main Logo"
-                className="relative w-48 h-48 object-contain drop-shadow-[0_0_40px_rgba(223,147,255,0.6)] hover:drop-shadow-[0_0_60px_rgba(223,147,255,0.9)] transition-all duration-500 hover:scale-110 animate-pulse-subtle"
+                className="relative h-80 object-contain drop-shadow-[0_0_40px_rgba(223,147,255,0.6)] hover:drop-shadow-[0_0_60px_rgba(223,147,255,0.9)] transition-all duration-500 hover:scale-110 animate-pulse-subtle"
               />
             </div>
 
