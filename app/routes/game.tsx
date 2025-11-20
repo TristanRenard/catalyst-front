@@ -1,437 +1,516 @@
 import { useEffect, useState } from "react"
-import { Link, useNavigate, type MetaArgs } from "react-router"
-import { publicAPI } from "~/utils/publicAPI"
+import { useNavigate, useRouteLoaderData } from "react-router"
+import { useWebSocket } from "~/hooks/useWebsocket"
+import { fetchSessionToken } from "~/utils/fetchSessionToken"
+import { GameBoardComponent } from "~/components/GameBoardComponent"
+import type {
+  PrivateRoomCreatedPayload,
+  PrivateRoomJoinedPayload,
+  WaitingForOpponentPayload,
+  MatchFoundPayload,
+  MatchStartPayload,
+  MatchEndPayload,
+  GameState,
+  ErrorPayload,
+  QueueJoinedPayload,
+  GameAction,
+  GameActionResult,
+  ConnectedPayload
+} from "~/types/socket"
 
-export const meta = ({ }: MetaArgs) => {
-  return [
-    { title: "Catalyst - Jeu de Cartes Stratégique" },
-    { name: "description", content: "Plongez dans l'univers de Catalyst, un jeu de cartes stratégique où chaque décision compte." },
-  ]
-}
+type GameMode = "menu" | "queue" | "waiting_in_room" | "in_game" | "game_over"
 
-const Home = () => {
+const Game = () => {
+  const { ws_url } = useRouteLoaderData("root") as { ws_url: string }
+  console.log("[Game] 🚀 Component mounted")
+  console.log("[Game] 🌐 WebSocket URL from loader:", ws_url)
+  const [sessionToken, setSessionToken] = useState<string>("")
+  const [connected, setConnected] = useState<boolean>(false)
+  const [gameMode, setGameMode] = useState<GameMode>("menu")
+  const [roomCode, setRoomCode] = useState<string>("")
+  const [roomCodeInput, setRoomCodeInput] = useState<string>("")
+  const [queueSize, setQueueSize] = useState<number>(0)
+  const [opponent, setOpponent] = useState<{ id: string; username: string } | null>(null)
+  const [gameState, setGameState] = useState<GameState | null>(null)
+  const [error, setError] = useState<string>("")
+  const [matchEndResult, setMatchEndResult] = useState<MatchEndPayload | null>(null)
+  const [myUserId, setMyUserId] = useState<string>("")
+
   const navigate = useNavigate()
-  const [user, setUser] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const [isScrolled, setIsScrolled] = useState(false)
 
-  useEffect(() => {
-    publicAPI.get("/@me", { withCredentials: true })
-      .then((response) => {
-        setUser(response.data.user)
-        console.log("Logged in user:", response.data.user)
-      })
-      .catch((error) => {
-        console.log("Not logged in", error)
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
-  }, [])
+  const connectionHandler = () => {
+    console.log("[Game] ✅ Connection handler called - WebSocket CONNECTED")
+  }
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100,
-      })
-    }
+  const handleConnected = (payload: ConnectedPayload) => {
+    console.log("[Game] ✅ WebSocket connected confirmed!")
+    console.log("[Game] 👤 User:", payload.username, "ID:", payload.userId)
+    setMyUserId(payload.userId)
+    setConnected(true)
+  }
 
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
-    }
+  const disconnectHandler = () => {
+    console.log("[Game] ❌ Disconnect handler called - navigating to /")
+    setConnected(false)
+    navigate("/")
+  }
 
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('scroll', handleScroll)
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('scroll', handleScroll)
-    }
-  }, [])
+  // Handlers pour les événements WebSocket
+  const handleQueueJoined = (payload: QueueJoinedPayload) => {
+    console.log("[Game] 📋 Joined queue, size:", payload.queueSize)
+    setQueueSize(payload.queueSize)
+    setGameMode("queue")
+    setError("")
+  }
 
-  const handleStartGame = () => {
-    if (user) {
-      navigate("/lobby")
-    } else {
-      navigate("/auth/login")
+  const handleQueueLeft = () => {
+    console.log("[Game] 🚪 Left queue")
+    setGameMode("menu")
+    setQueueSize(0)
+  }
+
+  const handlePrivateRoomCreated = (payload: PrivateRoomCreatedPayload) => {
+    console.log("[Game] 🏠 Private room created:", payload.roomCode)
+    setRoomCode(payload.roomCode)
+    setGameMode("waiting_in_room")
+    setError("")
+  }
+
+  const handlePrivateRoomJoined = (payload: PrivateRoomJoinedPayload) => {
+    console.log("[Game] 🚪 Joined private room:", payload.roomCode)
+    setRoomCode(payload.roomCode)
+    setGameMode("waiting_in_room")
+    setError("")
+  }
+
+  const handleWaitingForOpponent = (payload: WaitingForOpponentPayload) => {
+    console.log("[Game] ⏳ Waiting for opponent in room:", payload.roomCode)
+    setRoomCode(payload.roomCode)
+    setGameMode("waiting_in_room")
+  }
+
+  const handleMatchFound = (payload: MatchFoundPayload) => {
+    console.log("[Game] 🎮 Match found! Opponent:", payload.opponent.username)
+    setOpponent(payload.opponent)
+    // Le match trouvé passe automatiquement en attente de match_start
+    // On ne change pas gameMode ici, on attend match_start
+  }
+
+  const handleMatchStart = (payload: MatchStartPayload) => {
+    console.log("[Game] 🎮 Match started! Your turn:", payload.yourTurn)
+    console.log("[Game] 📊 GameState received:", payload.gameState)
+    setOpponent(payload.opponent)
+    setGameState(payload.gameState)
+    setGameMode("in_game")
+    setError("")
+  }
+
+  const handleOpponentAction = (result: GameActionResult) => {
+    console.log("[Game] 👥 Opponent action received:", result)
+    if (result.success && result.gameState) {
+      setGameState(result.gameState)
+    } else if (!result.success && result.error) {
+      console.error("[Game] ❌ Action failed:", result.error)
     }
   }
 
-  return (
-    <main className="relative min-h-screen overflow-hidden bg-linear-to-br from-[#1a1820] via-[#2a2435] to-[#1a1820]">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Gradient Orbs */}
-        <div
-          className="absolute w-96 h-96 bg-[#df93ff]/20 rounded-full blur-3xl transition-all duration-1000 ease-out"
-          style={{
-            left: `${mousePosition.x}%`,
-            top: `${mousePosition.y}%`,
-            transform: 'translate(-50%, -50%)',
-          }}
-        />
-        <div className="absolute top-20 right-20 w-72 h-72 bg-[#fe5c5c]/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 left-20 w-96 h-96 bg-[#df93ff]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+  const handleMatchEnd = (payload: MatchEndPayload) => {
+    console.log("[Game] 🏁 Match ended:", payload)
+    setMatchEndResult(payload)
+    setGameMode("game_over")
+  }
 
-        {/* Animated Particles */}
-        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-[#df93ff] rounded-full animate-particle-float" style={{ animationDelay: '0s' }} />
-        <div className="absolute top-1/3 right-1/3 w-1.5 h-1.5 bg-[#fe5c5c] rounded-full animate-particle-float" style={{ animationDelay: '2s' }} />
-        <div className="absolute bottom-1/3 left-1/2 w-2 h-2 bg-[#df93ff] rounded-full animate-particle-float" style={{ animationDelay: '4s' }} />
-        <div className="absolute top-2/3 right-1/4 w-1 h-1 bg-[#fe5c5c] rounded-full animate-particle-float" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-1/4 right-1/2 w-1.5 h-1.5 bg-[#df93ff] rounded-full animate-particle-float" style={{ animationDelay: '3s' }} />
+  const handleError = (payload: ErrorPayload) => {
+    console.error("[Game] 🔴 Server error:", payload.message)
+    setError(payload.message)
+  }
 
-        {/* Floating Cards Animation */}
-        <div className="absolute top-10 left-10 w-16 h-24 bg-linear-to-br from-[#df93ff]/30 to-[#fe5c5c]/30 rounded-lg backdrop-blur-sm border border-white/10 animate-float shadow-[0_8px_32px_rgba(223,147,255,0.2)]" />
-        <div className="absolute top-1/3 right-20 w-16 h-24 bg-linear-to-br from-[#fe5c5c]/30 to-[#df93ff]/30 rounded-lg backdrop-blur-sm border border-white/10 animate-float shadow-[0_8px_32px_rgba(254,92,92,0.2)]" style={{ animationDelay: '2s' }} />
-        <div className="absolute bottom-20 right-1/4 w-16 h-24 bg-linear-to-br from-[#df93ff]/30 to-[#fe5c5c]/30 rounded-lg backdrop-blur-sm border border-white/10 animate-float shadow-[0_8px_32px_rgba(223,147,255,0.2)]" style={{ animationDelay: '4s' }} />
+  console.log("[Game] 🔧 Creating WebSocket with:", {
+    url: ws_url,
+    token: sessionToken ? `${sessionToken.substring(0, 15)}...` : "EMPTY",
+    autoConnect: true,
+  })
 
-        {/* Grid Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(223,147,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(223,147,255,0.03)_1px,transparent_1px)] bg-size-[50px_50px] animate-grid-scroll" />
-      </div>
+  const ws = useWebSocket({
+    url: ws_url,
+    token: sessionToken,
+    autoConnect: true,
+    handlers: {
+      onServerConnected: handleConnected,
+      onConnected: connectionHandler,
+      onDisconnected: disconnectHandler,
+      onQueueJoined: handleQueueJoined,
+      onQueueLeft: handleQueueLeft,
+      onPrivateRoomCreated: handlePrivateRoomCreated,
+      onPrivateRoomJoined: handlePrivateRoomJoined,
+      onWaitingForOpponent: handleWaitingForOpponent,
+      onMatchFound: handleMatchFound,
+      onMatchStart: handleMatchStart,
+      onOpponentAction: handleOpponentAction,
+      onMatchEnd: handleMatchEnd,
+      onError: handleError,
+      onConnectionError: (error) => {
+        console.error("[Game] 🔴 Connection ERROR:", error)
+      },
+    }
+  })
 
-      {/* Header */}
-      <header className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-[#1a1820]/95 backdrop-blur-xl border-b border-[#3a3840] shadow-lg' : 'bg-transparent'}`}>
-        <div className="flex justify-between items-center p-6 max-w-7xl mx-auto">
-          <Link to="/" className="flex items-center gap-4 group">
-            <img
-              src="/images/logo.png"
-              alt="Catalyst Logo"
-              className="w-12 h-12 object-contain drop-shadow-[0_0_15px_rgba(223,147,255,0.5)] group-hover:drop-shadow-[0_0_25px_rgba(223,147,255,0.8)] transition-all duration-300 group-hover:rotate-12"
-            />
-            <span className="text-2xl font-bold text-[#EBDFF0] tracking-tight group-hover:text-[#df93ff] transition-colors">Catalyst</span>
-          </Link>
+  // Actions de jeu
+  const handleJoinQueue = () => {
+    console.log("[Game] 🎯 Joining queue...")
+    ws.joinQueue()
+  }
 
-          <nav className="flex items-center gap-4">
-            <Link
-              to="/rules"
-              className="hidden md:block px-4 py-2 text-[#EBDFF0]/80 hover:text-[#df93ff] font-medium transition-all duration-300 hover:scale-105"
-            >
-              Règles
-            </Link>
-            {user ? (
-              <>
-                <div className="flex items-center gap-3 bg-[#2a2830]/50 backdrop-blur-md px-4 py-2 rounded-full border border-[#3a3840] hover:border-[#df93ff]/50 transition-all duration-300">
-                  <div className="w-8 h-8 rounded-full bg-linear-to-br from-[#df93ff] to-[#fe5c5c] flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                    {user.username?.[0]?.toUpperCase() || 'U'}
-                  </div>
-                  <span className="text-[#EBDFF0] font-medium">{user.username}</span>
-                </div>
-                <Link
-                  to="/admin"
-                  className="px-5 py-2 bg-[#df93ff]/10 hover:bg-[#df93ff]/20 text-[#df93ff] font-semibold rounded-full border border-[#df93ff]/30 hover:border-[#df93ff]/60 transition-all duration-300 hover:scale-105"
+  const handleLeaveQueue = () => {
+    console.log("[Game] 🚪 Leaving queue...")
+    ws.leaveQueue()
+  }
+
+  const handleCreatePrivateRoom = () => {
+    console.log("[Game] 🏠 Creating private room...")
+    ws.createPrivateRoom()
+  }
+
+  const handleJoinPrivateRoom = () => {
+    if (!roomCodeInput.trim()) {
+      setError("Veuillez entrer un code de salle")
+      return
+    }
+    console.log("[Game] 🚪 Joining private room:", roomCodeInput)
+    ws.joinPrivateRoom(roomCodeInput.toUpperCase())
+  }
+
+  const handleLeaveRoom = () => {
+    console.log("[Game] 🚪 Leaving private room...")
+    ws.leavePrivateRoom()
+    setGameMode("menu")
+    setRoomCode("")
+    setRoomCodeInput("")
+  }
+
+  const handleBackToMenu = () => {
+    if (gameMode === "queue") {
+      handleLeaveQueue()
+    } else if (gameMode === "waiting_in_room") {
+      handleLeaveRoom()
+    }
+    setGameMode("menu")
+    setOpponent(null)
+    setGameState(null)
+    setMatchEndResult(null)
+    setError("")
+  }
+
+  const handleGameAction = (action: GameAction) => {
+    console.log("[Game] 🎮 Sending game action:", action)
+    ws.sendGameAction(action)
+  }
+
+  const handleSurrender = () => {
+    if (confirm("Êtes-vous sûr de vouloir abandonner ?")) {
+      console.log("[Game] 🏳️ Surrendering...")
+      ws.surrender()
+    }
+  }
+
+  useEffect(() => {
+    console.log("[Game] 📥 useEffect - Loading session token...")
+    let isMounted = true
+
+    const loadToken = async () => {
+      console.log("[Game] 🔍 Fetching session token from API...")
+      const token = await fetchSessionToken()
+      console.log("[Game] 📦 Session token received:", token ? `${token.substring(0, 15)}... (length: ${token.length})` : "❌ NULL/EMPTY")
+
+      if (isMounted) {
+        console.log("[Game] ✅ Component still mounted, setting token")
+        setSessionToken(token || "")
+      } else {
+        console.log("[Game] ⚠️ Component unmounted, discarding token")
+      }
+    }
+
+    loadToken()
+
+    return () => {
+      console.log("[Game] 🧹 Cleanup - marking component as unmounted")
+      isMounted = false
+    }
+  }, [])
+
+  console.log("[Game] 🎨 Render - State:", {
+    connected,
+    connectionState: ws.connectionState,
+    hasToken: !!sessionToken,
+    tokenPreview: sessionToken ? sessionToken.substring(0, 15) + "..." : "none",
+    gameMode,
+  })
+
+  // Affichage pendant la connexion
+  if (!connected) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <h1 className="text-2xl font-bold text-white">Connexion au serveur...</h1>
+          <div className="text-gray-400 space-y-1">
+            <p>État: {ws.connectionState}</p>
+            <p>Token: {sessionToken ? "✅ Chargé" : "⏳ Chargement..."}</p>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  // Menu principal
+  if (gameMode === "menu") {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold text-white mb-8 text-center">Catalyst - Menu Principal</h1>
+
+          {error && (
+            <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded mb-6">
+              {error}
+            </div>
+          )}
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Matchmaking rapide */}
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+              <h2 className="text-2xl font-bold text-white mb-4">🎯 Matchmaking Rapide</h2>
+              <p className="text-gray-400 mb-6">Trouvez un adversaire aléatoire et commencez à jouer immédiatement</p>
+              <button
+                onClick={handleJoinQueue}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                Rejoindre la file d'attente
+              </button>
+            </div>
+
+            {/* Créer une partie privée */}
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+              <h2 className="text-2xl font-bold text-white mb-4">🏠 Partie Privée</h2>
+              <p className="text-gray-400 mb-6">Créez une salle privée et invitez un ami avec le code</p>
+              <button
+                onClick={handleCreatePrivateRoom}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                Créer une salle privée
+              </button>
+            </div>
+
+            {/* Rejoindre une partie privée */}
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 md:col-span-2">
+              <h2 className="text-2xl font-bold text-white mb-4">🚪 Rejoindre une Salle</h2>
+              <p className="text-gray-400 mb-4">Entrez le code de la salle pour rejoindre une partie privée</p>
+              <div className="flex gap-4">
+                <input
+                  type="text"
+                  value={roomCodeInput}
+                  onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
+                  placeholder="CODE SALLE"
+                  maxLength={6}
+                  className="flex-1 bg-gray-700 border border-gray-600 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 uppercase"
+                />
+                <button
+                  onClick={handleJoinPrivateRoom}
+                  disabled={!roomCodeInput.trim()}
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg transition-colors"
                 >
-                  Admin
-                </Link>
-              </>
-            ) : (
-              <Link
-                to="/auth/login"
-                className="px-6 py-2.5 bg-linear-to-r from-[#df93ff] to-[#fe5c5c] text-white font-semibold rounded-full hover:shadow-[0_0_30px_rgba(223,147,255,0.5)] transition-all duration-300 hover:scale-105"
-              >
-                Connexion
-              </Link>
-            )}
-          </nav>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-120px)] px-4 pt-10">
-        <div className="text-center space-y-8 max-w-6xl mx-auto">
-          {/* Logo and Title */}
-          <div className="flex flex-col items-center gap-8 animate-fade-in">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-[#df93ff]/30 rounded-full blur-3xl group-hover:bg-[#df93ff]/40 transition-all duration-500"></div>
-              <img
-                src="/images/logo.png"
-                alt="Catalyst Main Logo"
-                className="relative w-48 h-48 object-contain drop-shadow-[0_0_40px_rgba(223,147,255,0.6)] hover:drop-shadow-[0_0_60px_rgba(223,147,255,0.9)] transition-all duration-500 hover:scale-110 animate-pulse-subtle"
-              />
-            </div>
-
-            <h1 className="text-7xl md:text-9xl font-black text-transparent bg-clip-text bg-linear-to-r from-[#df93ff] via-[#fe5c5c] to-[#df93ff] tracking-tight animate-gradient bg-size-[200%_auto] leading-tight">
-              CATALYST
-            </h1>
-          </div>
-
-          {/* Subtitle with typing effect */}
-          <div className="space-y-4 animate-fade-in-delay">
-            <p className="text-2xl md:text-4xl text-[#EBDFF0] font-light tracking-wide opacity-90">
-              Le jeu de cartes où <span className="font-bold text-[#df93ff]">l'énergie</span> est votre arme
-            </p>
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <span className="px-4 py-2 bg-[#df93ff]/10 text-[#df93ff] rounded-full text-sm font-semibold border border-[#df93ff]/20">
-                🎮 Stratégie
-              </span>
-              <span className="px-4 py-2 bg-[#fe5c5c]/10 text-[#fe5c5c] rounded-full text-sm font-semibold border border-[#fe5c5c]/20">
-                ⚡ Action
-              </span>
-              <span className="px-4 py-2 bg-[#df93ff]/10 text-[#df93ff] rounded-full text-sm font-semibold border border-[#df93ff]/20">
-                🎯 2 Joueurs
-              </span>
+                  Rejoindre
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Description */}
-          <p className="text-lg md:text-xl text-[#EBDFF0]/70 max-w-3xl mx-auto leading-relaxed animate-fade-in-delay-2">
-            Maîtrisez les énergies, déployez des stratégies audacieuses et terrassez vos adversaires
-            dans des duels tactiques intenses. <span className="text-[#df93ff] font-semibold">Chaque carte compte, chaque choix est décisif.</span>
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center pt-8 animate-fade-in-delay-3">
+          <div className="mt-8 text-center">
             <button
-              onClick={handleStartGame}
-              disabled={isLoading}
-              className="group relative px-14 py-6 bg-linear-to-r from-[#df93ff] to-[#fe5c5c] text-white text-xl font-bold rounded-2xl shadow-[0_0_40px_rgba(223,147,255,0.3)] hover:shadow-[0_0_60px_rgba(223,147,255,0.6)] transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+              onClick={() => navigate("/")}
+              className="text-gray-400 hover:text-white transition-colors"
             >
-              <span className="relative z-10 flex items-center gap-3">
-                {isLoading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Chargement...
-                  </>
-                ) : (
-                  <>
-                    {user ? '🎮 Jouer Maintenant' : '✨ Commencer'}
-                    <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </>
-                )}
-              </span>
-              <div className="absolute inset-0 bg-linear-to-r from-[#fe5c5c] to-[#df93ff] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              ← Retour à l'accueil
             </button>
+          </div>
+        </div>
+      </main>
+    )
+  }
 
-            <Link
-              to="/lobby"
-              className="group px-12 py-6 bg-[#2a2830]/80 backdrop-blur-md text-[#EBDFF0] text-xl font-semibold rounded-2xl border-2 border-[#df93ff]/50 hover:border-[#df93ff] hover:bg-[#2a2830] transition-all duration-300 hover:scale-105 flex items-center gap-3"
-            >
-              🌐 Mode Multijoueur
-              <svg className="w-5 h-5 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </Link>
+  // File d'attente
+  if (gameMode === "queue") {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-8">
+        <div className="bg-gray-800 rounded-lg p-8 border border-gray-700 max-w-md w-full text-center">
+          <div className="animate-pulse mb-6">
+            <div className="text-6xl mb-4">🎯</div>
+            <h1 className="text-3xl font-bold text-white mb-2">Recherche d'adversaire...</h1>
+            <p className="text-gray-400">Joueurs en file d'attente: {queueSize}</p>
           </div>
 
-          {/* Stats Bar */}
-          <div className="flex justify-center gap-8 md:gap-16 pt-12 pb-8 animate-fade-in-delay-3">
-            <div className="text-center group cursor-default">
-              <div className="text-4xl md:text-5xl font-black text-[#df93ff] mb-2 group-hover:scale-110 transition-transform">20</div>
-              <div className="text-sm text-[#EBDFF0]/60 font-medium">Tours par partie</div>
-            </div>
-            <div className="w-px bg-[#3a3840]"></div>
-            <div className="text-center group cursor-default">
-              <div className="text-4xl md:text-5xl font-black text-[#fe5c5c] mb-2 group-hover:scale-110 transition-transform">2</div>
-              <div className="text-sm text-[#EBDFF0]/60 font-medium">Joueurs</div>
-            </div>
-            <div className="w-px bg-[#3a3840]"></div>
-            <div className="text-center group cursor-default">
-              <div className="text-4xl md:text-5xl font-black text-[#df93ff] mb-2 group-hover:scale-110 transition-transform">∞</div>
-              <div className="text-sm text-[#EBDFF0]/60 font-medium">Possibilités</div>
-            </div>
+          <div className="flex justify-center mb-6">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           </div>
 
-          {/* Features */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-16 animate-fade-in-delay-4">
-            <div className="relative bg-[#2a2830]/50 backdrop-blur-md rounded-2xl p-8 border border-[#3a3840] hover:border-[#df93ff]/50 transition-all duration-300 hover:scale-105 group overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#df93ff]/10 rounded-full blur-2xl group-hover:bg-[#df93ff]/20 transition-all"></div>
-              <div className="relative">
-                <div className="w-16 h-16 bg-linear-to-br from-[#df93ff] to-[#fe5c5c] rounded-xl flex items-center justify-center mb-6 group-hover:rotate-12 transition-transform shadow-lg">
-                  <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold text-[#EBDFF0] mb-3">Énergies Dynamiques</h3>
-                <p className="text-[#EBDFF0]/70 leading-relaxed">Collectez et combinez différentes énergies pour déchaîner des combos dévastateurs et dominer la partie</p>
-              </div>
+          {opponent && (
+            <div className="bg-green-500/20 border border-green-500 text-green-200 px-4 py-3 rounded mb-4 animate-bounce">
+              <p className="font-bold">✨ Adversaire trouvé !</p>
+              <p>{opponent.username}</p>
+              <p className="text-xs mt-2">Démarrage de la partie...</p>
+            </div>
+          )}
+
+          <button
+            onClick={handleBackToMenu}
+            disabled={!!opponent}
+            className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-colors"
+          >
+            {opponent ? "Démarrage..." : "Annuler"}
+          </button>
+        </div>
+      </main>
+    )
+  }
+
+  // Salle d'attente privée
+  if (gameMode === "waiting_in_room") {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-8">
+        <div className="bg-gray-800 rounded-lg p-8 border border-gray-700 max-w-md w-full text-center">
+          <div className="mb-6">
+            <div className="text-6xl mb-4">🏠</div>
+            <h1 className="text-3xl font-bold text-white mb-4">Salle Privée</h1>
+
+            <div className="bg-gray-700 rounded-lg p-6 mb-6">
+              <p className="text-gray-400 text-sm mb-2">Code de la salle</p>
+              <p className="text-4xl font-bold text-white tracking-widest">{roomCode}</p>
+              <p className="text-gray-400 text-sm mt-2">Partagez ce code avec votre ami</p>
             </div>
 
-            <div className="relative bg-[#2a2830]/50 backdrop-blur-md rounded-2xl p-8 border border-[#3a3840] hover:border-[#df93ff]/50 transition-all duration-300 hover:scale-105 group overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#fe5c5c]/10 rounded-full blur-2xl group-hover:bg-[#fe5c5c]/20 transition-all"></div>
-              <div className="relative">
-                <div className="w-16 h-16 bg-linear-to-br from-[#fe5c5c] to-[#df93ff] rounded-xl flex items-center justify-center mb-6 group-hover:rotate-12 transition-transform shadow-lg">
-                  <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold text-[#EBDFF0] mb-3">Stratégie Pure</h3>
-                <p className="text-[#EBDFF0]/70 leading-relaxed">Anticipez les coups de votre adversaire et élaborez des tactiques victorieuses à chaque tour</p>
-              </div>
-            </div>
-
-            <div className="relative bg-[#2a2830]/50 backdrop-blur-md rounded-2xl p-8 border border-[#3a3840] hover:border-[#df93ff]/50 transition-all duration-300 hover:scale-105 group overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#df93ff]/10 rounded-full blur-2xl group-hover:bg-[#df93ff]/20 transition-all"></div>
-              <div className="relative">
-                <div className="w-16 h-16 bg-linear-to-br from-[#df93ff] to-[#fe5c5c] rounded-xl flex items-center justify-center mb-6 group-hover:rotate-12 transition-transform shadow-lg">
-                  <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold text-[#EBDFF0] mb-3">Multijoueur en Temps Réel</h3>
-                <p className="text-[#EBDFF0]/70 leading-relaxed">Affrontez des joueurs du monde entier dans des matchs intenses en temps réel</p>
-              </div>
+            <div className="animate-pulse">
+              <p className="text-gray-400">En attente d'un adversaire...</p>
             </div>
           </div>
 
-          {/* How to Play */}
-          <div className="pt-20 pb-10 animate-fade-in-delay-4">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#EBDFF0] mb-12 text-center">
-              Comment jouer ?
-            </h2>
-            <div className="grid md:grid-cols-4 gap-6">
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-linear-to-r from-[#df93ff] to-[#fe5c5c] rounded-2xl opacity-20 group-hover:opacity-40 blur transition-all duration-300"></div>
-                <div className="relative bg-[#2a2830]/80 backdrop-blur-md rounded-2xl p-6 border border-[#3a3840]">
-                  <div className="text-4xl font-black text-[#df93ff] mb-4">01</div>
-                  <h3 className="text-lg font-bold text-[#EBDFF0] mb-2">Recevez vos cartes</h3>
-                  <p className="text-sm text-[#EBDFF0]/70">5 cartes Situation et 3 cartes Énergie pour commencer</p>
-                </div>
-              </div>
-
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-linear-to-r from-[#fe5c5c] to-[#df93ff] rounded-2xl opacity-20 group-hover:opacity-40 blur transition-all duration-300"></div>
-                <div className="relative bg-[#2a2830]/80 backdrop-blur-md rounded-2xl p-6 border border-[#3a3840]">
-                  <div className="text-4xl font-black text-[#fe5c5c] mb-4">02</div>
-                  <h3 className="text-lg font-bold text-[#EBDFF0] mb-2">Piochez des énergies</h3>
-                  <p className="text-sm text-[#EBDFF0]/70">À chaque tour, piochez une carte Énergie</p>
-                </div>
-              </div>
-
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-linear-to-r from-[#df93ff] to-[#fe5c5c] rounded-2xl opacity-20 group-hover:opacity-40 blur transition-all duration-300"></div>
-                <div className="relative bg-[#2a2830]/80 backdrop-blur-md rounded-2xl p-6 border border-[#3a3840]">
-                  <div className="text-4xl font-black text-[#df93ff] mb-4">03</div>
-                  <h3 className="text-lg font-bold text-[#EBDFF0] mb-2">Complétez vos cartes</h3>
-                  <p className="text-sm text-[#EBDFF0]/70">Placez 5 énergies sur vos Situations</p>
-                </div>
-              </div>
-
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-linear-to-r from-[#fe5c5c] to-[#df93ff] rounded-2xl opacity-20 group-hover:opacity-40 blur transition-all duration-300"></div>
-                <div className="relative bg-[#2a2830]/80 backdrop-blur-md rounded-2xl p-6 border border-[#3a3840]">
-                  <div className="text-4xl font-black text-[#fe5c5c] mb-4">04</div>
-                  <h3 className="text-lg font-bold text-[#EBDFF0] mb-2">Gagnez la partie</h3>
-                  <p className="text-sm text-[#EBDFF0]/70">Le moins de points possible après 20 tours</p>
-                </div>
-              </div>
+          {opponent && (
+            <div className="bg-green-500/20 border border-green-500 text-green-200 px-4 py-3 rounded mb-4 animate-bounce">
+              <p className="font-bold">✨ Adversaire rejoint !</p>
+              <p>{opponent.username}</p>
+              <p className="text-xs mt-2">Démarrage de la partie...</p>
             </div>
+          )}
 
-            <div className="text-center mt-10">
-              <Link
-                to="/rules"
-                className="inline-flex items-center gap-2 text-[#df93ff] hover:text-[#EBDFF0] font-semibold transition-colors group"
+          <button
+            onClick={handleBackToMenu}
+            disabled={!!opponent}
+            className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-colors"
+          >
+            {opponent ? "Démarrage..." : "Quitter la salle"}
+          </button>
+        </div>
+      </main>
+    )
+  }
+
+  // Partie en cours
+  if (gameMode === "in_game") {
+    if (!gameState) {
+      return (
+        <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-500 mx-auto"></div>
+            <h1 className="text-2xl font-bold text-white">Chargement de la partie...</h1>
+            <p className="text-gray-400">Initialisation du plateau de jeu</p>
+          </div>
+        </main>
+      )
+    }
+
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div className="max-w-7xl mx-auto">
+          {/* Header avec bouton abandonner */}
+          <div className="bg-gray-800 border-b border-gray-700 p-4">
+            <div className="flex justify-between items-center max-w-7xl mx-auto">
+              <h1 className="text-2xl font-bold text-white">Catalyst</h1>
+              <button
+                onClick={handleSurrender}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
               >
-                Voir les règles complètes
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
+                🏳️ Abandonner
+              </button>
             </div>
           </div>
-        </div>
-      </section>
 
-      <footer className="relative z-10 border-t border-[#3a3840] bg-[#1a1820]/50 backdrop-blur-md mt-20">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-3">
-              <img src="/images/logo.png" alt="Catalyst" className="w-8 h-8 object-contain opacity-70" />
-              <span className="text-[#EBDFF0]/70 text-sm">© 2025 Catalyst. Tous droits réservés.</span>
+          {/* Plateau de jeu */}
+          <GameBoardComponent
+            gameState={gameState}
+            isMyTurn={true}
+            myPlayerId={myUserId || gameState.player1.userId}
+            onGameAction={handleGameAction}
+          />
+        </div>
+      </main>
+    )
+  }
+
+  // Écran de fin de partie
+  if (gameMode === "game_over" && matchEndResult) {
+    const isVictory = matchEndResult.winner === "you"
+    const isDraw = matchEndResult.winner === "draw"
+
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-8">
+        <div className="bg-gray-800 rounded-lg p-8 border border-gray-700 max-w-2xl w-full text-center">
+          <div className="mb-6">
+            <div className="text-8xl mb-4">
+              {isVictory ? "🏆" : isDraw ? "🤝" : "😔"}
             </div>
-            <div className="flex gap-6 text-sm">
-              <Link to="/admin" className="text-[#EBDFF0]/70 hover:text-[#df93ff] transition-colors">
-                Administration
-              </Link>
-              <Link to="/rules" className="text-[#EBDFF0]/70 hover:text-[#df93ff] transition-colors">
-                Règles du jeu
-              </Link>
-              <Link to="/admin/leaderboard" className="text-[#EBDFF0]/70 hover:text-[#df93ff] transition-colors">
-                Classement
-              </Link>
-            </div>
+            <h1 className={`text-4xl font-bold mb-2 ${isVictory ? "text-green-400" : isDraw ? "text-yellow-400" : "text-red-400"}`}>
+              {isVictory ? "Victoire !" : isDraw ? "Match Nul" : "Défaite"}
+            </h1>
+            <p className="text-gray-400 text-lg">
+              {matchEndResult.reason === "surrender" && (isVictory ? "Votre adversaire a abandonné" : "Vous avez abandonné")}
+              {matchEndResult.reason === "disconnect" && (isVictory ? "Votre adversaire s'est déconnecté" : "Déconnexion")}
+              {matchEndResult.reason === "victory" && (isVictory ? "Vous avez le moins de points !" : "Votre adversaire a gagné")}
+            </p>
           </div>
-        </div>
-      </footer>
 
-      {/* Custom Styles for Animations */}
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(5deg); }
-        }
-        
-        @keyframes particle-float {
-          0%, 100% { transform: translate(0, 0); opacity: 0.3; }
-          25% { transform: translate(20px, -30px); opacity: 0.6; }
-          50% { transform: translate(-15px, -60px); opacity: 0.9; }
-          75% { transform: translate(10px, -40px); opacity: 0.5; }
-        }
-        
-        @keyframes grid-scroll {
-          0% { background-position: 0 0; }
-          100% { background-position: 50px 50px; }
-        }
-        
-        @keyframes gradient {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        
-        @keyframes pulse-subtle {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.8; }
-        }
-        
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        
-        .animate-particle-float {
-          animation: particle-float 8s ease-in-out infinite;
-        }
-        
-        .animate-grid-scroll {
-          animation: grid-scroll 20s linear infinite;
-        }
-        
-        .animate-gradient {
-          animation: gradient 3s ease infinite;
-        }
-        
-        .animate-pulse-subtle {
-          animation: pulse-subtle 4s ease-in-out infinite;
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.8s ease-out;
-        }
-        
-        .animate-fade-in-delay {
-          animation: fade-in 0.8s ease-out 0.2s both;
-        }
-        
-        .animate-fade-in-delay-2 {
-          animation: fade-in 0.8s ease-out 0.4s both;
-        }
-        
-        .animate-fade-in-delay-3 {
-          animation: fade-in 0.8s ease-out 0.6s both;
-        }
-        
-        .animate-fade-in-delay-4 {
-          animation: fade-in 0.8s ease-out 0.8s both;
-        }
-      `}</style>
+          {gameState && (
+            <div className="bg-gray-700 rounded-lg p-6 mb-6">
+              <h3 className="text-white font-bold mb-4">Scores finaux</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-gray-400">{gameState.player1.username}</p>
+                  <p className="text-3xl font-bold text-white">{gameState.player1.points} pts</p>
+                </div>
+                <div>
+                  <p className="text-gray-400">{gameState.player2.username}</p>
+                  <p className="text-3xl font-bold text-white">{gameState.player2.points} pts</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={handleBackToMenu}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+          >
+            Retour au menu
+          </button>
+        </div>
+      </main>
+    )
+  }
+
+  // État par défaut
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+      <div className="text-center text-white">
+        <p>État non géré: {gameMode}</p>
+      </div>
     </main>
   )
 }
 
-export default Home
+export default Game

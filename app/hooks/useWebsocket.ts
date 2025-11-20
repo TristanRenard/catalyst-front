@@ -72,6 +72,9 @@ export const useWebSocket = (options: UseWebSocketOptions): UseWebSocketReturn =
     const currentHandlers = handlersRef.current
 
     switch (event.type) {
+      case 'connected':
+        currentHandlers?.onServerConnected?.(event.payload)
+        break
       case 'queue_joined':
         currentHandlers?.onQueueJoined?.(event.payload)
         break
@@ -128,60 +131,90 @@ export const useWebSocket = (options: UseWebSocketOptions): UseWebSocketReturn =
 
   // Fonction de connexion
   const connect = useCallback(() => {
+    console.log('[useWebSocket] 🔌 connect() called')
+    console.log('[useWebSocket] 📊 Current state:', {
+      url,
+      token: token ? `${token.substring(0, 15)}... (length: ${token.length})` : 'EMPTY',
+      currentReadyState: wsRef.current?.readyState,
+      WebSocketStates: {
+        CONNECTING: WebSocket.CONNECTING,
+        OPEN: WebSocket.OPEN,
+        CLOSING: WebSocket.CLOSING,
+        CLOSED: WebSocket.CLOSED,
+      }
+    })
+
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      console.warn('WebSocket déjà connecté')
+      console.warn('[useWebSocket] ⚠️  WebSocket déjà connecté')
+      return
+    }
+
+    if (!token || token.length === 0) {
+      console.error('[useWebSocket] ❌ Cannot connect: token is empty!')
       return
     }
 
     cleanupTimers()
+    console.log('[useWebSocket] 🔄 Setting state to "connecting"')
     setConnectionState('connecting')
 
     try {
       // Note: Le navigateur standard WebSocket ne supporte pas les headers personnalisés
       // Il faut passer le token dans l'URL ou utiliser une bibliothèque compatible
       const wsUrl = `${url}?token=${encodeURIComponent(token)}`
+      console.log('[useWebSocket] 🌐 Creating WebSocket with URL:', wsUrl.replace(token, token.substring(0, 15) + '...'))
       const ws = new WebSocket(wsUrl)
 
       ws.onopen = () => {
-        console.log('WebSocket connecté')
+        console.log('[useWebSocket] ✅ WebSocket OPENED successfully!')
         setConnectionState('connected')
         handlersRef.current?.onConnected?.()
         startHeartbeat()
       }
 
       ws.onmessage = (event) => {
+        console.log('[useWebSocket] 📨 Message received:', event.data)
         try {
           const data: ServerEvent = JSON.parse(event.data)
+          console.log('[useWebSocket] 📦 Parsed message:', data)
           handleServerEvent(data)
         } catch (error) {
-          console.error('Erreur de parsing du message WebSocket:', error)
+          console.error('[useWebSocket] 🔴 Erreur de parsing du message WebSocket:', error)
         }
       }
 
       ws.onerror = (error) => {
-        console.error('Erreur WebSocket:', error)
+        console.error('[useWebSocket] 🔴 WebSocket ERROR event:', error)
+        console.error('[useWebSocket] 🔴 ReadyState at error:', ws.readyState)
         setConnectionState('error')
         handlersRef.current?.onConnectionError?.(error)
       }
 
-      ws.onclose = () => {
-        console.log('WebSocket déconnecté')
+      ws.onclose = (event) => {
+        console.log('[useWebSocket] 🚪 WebSocket CLOSED')
+        console.log('[useWebSocket] 📋 Close event details:', {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean
+        })
         setConnectionState('disconnected')
         cleanupTimers()
         handlersRef.current?.onDisconnected?.()
 
         // Tentative de reconnexion si activée
         if (reconnectOnError) {
+          console.log(`[useWebSocket] 🔄 Reconnecting in ${reconnectDelay}ms...`)
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log('Tentative de reconnexion...')
+            console.log('[useWebSocket] 🔁 Tentative de reconnexion...')
             connect()
           }, reconnectDelay)
         }
       }
 
       wsRef.current = ws
+      console.log('[useWebSocket] 📌 WebSocket instance stored in ref')
     } catch (error) {
-      console.error('Erreur lors de la création du WebSocket:', error)
+      console.error('[useWebSocket] 💥 Exception lors de la création du WebSocket:', error)
       setConnectionState('error')
     }
   }, [url, token, handleServerEvent, startHeartbeat, reconnectOnError, reconnectDelay, cleanupTimers])
@@ -208,17 +241,43 @@ export const useWebSocket = (options: UseWebSocketOptions): UseWebSocketReturn =
   const sendGameAction = useCallback((action: unknown) => send('game_action', action), [send])
   const surrender = useCallback(() => send('surrender'), [send])
 
-  // Connexion automatique au montage si autoConnect est activé
+  // Connexion automatique au montage si autoConnect est activé ET si on a un token
   useEffect(() => {
-    if (autoConnect) {
-      connect()
+    console.log('[useWebSocket] 🎬 useEffect autoConnect triggered:', {
+      autoConnect,
+      hasToken: !!token,
+      tokenLength: token?.length,
+      currentReadyState: wsRef.current?.readyState
+    })
+
+    // Ne connecter que si on n'est pas déjà connecté ou en cours de connexion
+    if (autoConnect && token && token.length > 0) {
+      const currentState = wsRef.current?.readyState
+      if (currentState !== WebSocket.OPEN && currentState !== WebSocket.CONNECTING) {
+        console.log('[useWebSocket] ✅ AutoConnect conditions met - connecting...')
+        connect()
+      } else {
+        console.log('[useWebSocket] ⏭️ Already connected or connecting, skipping...')
+      }
+    } else {
+      console.log('[useWebSocket] ⏸️  AutoConnect conditions NOT met:', {
+        autoConnect,
+        hasToken: !!token,
+        reason: !autoConnect ? 'autoConnect disabled' : !token ? 'no token' : 'token empty'
+      })
     }
 
-    // Nettoyage à la déconnexion du composant
+    // Nettoyage SEULEMENT à la déconnexion du composant
     return () => {
-      disconnect()
+      console.log('[useWebSocket] 🧹 Cleanup - disconnecting...')
+      if (wsRef.current) {
+        wsRef.current.close()
+        wsRef.current = null
+      }
+      cleanupTimers()
     }
-  }, [autoConnect, connect, disconnect])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoConnect, token])
 
   return {
     connectionState,

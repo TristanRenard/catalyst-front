@@ -98,11 +98,12 @@ export interface QueueJoinedPayload {
 
 // Structure des événements du serveur avec type union discriminé
 export type ServerEvent =
+  | { type: "connected"; payload: ConnectedPayload }
   | { type: "queue_joined"; payload: QueueJoinedPayload }
   | { type: "queue_left"; payload?: never }
   | { type: "match_found"; payload: MatchFoundPayload }
   | { type: "match_start"; payload: MatchStartPayload }
-  | { type: "opponent_action"; payload: unknown }
+  | { type: "opponent_action"; payload: GameActionResult }
   | { type: "match_end"; payload: MatchEndPayload }
   | { type: "private_room_created"; payload: PrivateRoomCreatedPayload }
   | { type: "private_room_joined"; payload: PrivateRoomJoinedPayload }
@@ -113,19 +114,27 @@ export type ServerEvent =
 // État de connexion du WebSocket
 export type ConnectionState = "disconnected" | "connecting" | "connected" | "error"
 
+// Payload pour connected
+export interface ConnectedPayload {
+  message: string
+  userId: string
+  username: string
+}
+
 // Handlers pour les événements serveur
 export interface WebSocketHandlers {
   onQueueJoined?: (payload: QueueJoinedPayload) => void
   onQueueLeft?: () => void
   onMatchFound?: (payload: MatchFoundPayload) => void
   onMatchStart?: (payload: MatchStartPayload) => void
-  onOpponentAction?: (payload: unknown) => void
+  onOpponentAction?: (payload: GameActionResult) => void
   onMatchEnd?: (payload: MatchEndPayload) => void
   onPrivateRoomCreated?: (payload: PrivateRoomCreatedPayload) => void
   onPrivateRoomJoined?: (payload: PrivateRoomJoinedPayload) => void
   onWaitingForOpponent?: (payload: WaitingForOpponentPayload) => void
   onError?: (payload: ErrorPayload) => void
-  onConnected?: () => void
+  onServerConnected?: (payload: ConnectedPayload) => void  // Événement du serveur
+  onConnected?: () => void  // Événement de connexion WebSocket (onopen)
   onDisconnected?: () => void
   onConnectionError?: (error: Event) => void
 }

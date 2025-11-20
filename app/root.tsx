@@ -7,8 +7,16 @@ import {
   ScrollRestoration,
 } from "react-router"
 
+import type { LoaderFunction } from "@remix-run/node"
 import type { Route } from "./+types/root"
 import "./app.css"
+
+export const loader: LoaderFunction = async () => {
+  const ws_url = process.env.WS_URL || ""
+  return {
+    ws_url,
+  }
+}
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
